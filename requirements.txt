@@ -1,0 +1,5 @@
+dataclasses
+environs
+eventlet
+python-socketio
+jsonschema
