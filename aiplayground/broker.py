@@ -145,6 +145,7 @@ class GameRoom(Namespace):
                 playerid=playerid,
             )
         else:
+            room.update(status="playing", turn=turn)
             if visibility == "broadcast":
                 GamestateMessage(
                     self,

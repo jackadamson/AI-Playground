@@ -1,4 +1,5 @@
 from jsonschema import validate, ValidationError
+import json
 from functools import wraps
 from typing import TYPE_CHECKING, Optional, Tuple
 from flask import request
@@ -51,6 +52,7 @@ def expect(schema: dict):
     def decorator(f: callable):
         @wraps(f)
         def wrapper(self: "GameRoom", data: dict):
+            logger.debug(f"Receieved {f.__name__} message:\n{json.dumps(data, indent=2)}\n")
             try:
                 validate(data, schema)
             except ValidationError as e:

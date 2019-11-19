@@ -1,7 +1,7 @@
 import socketio
 import json
 from typing import Optional
-from aiplayground.settings import GAME, LOBBY_NAME, ASIMOV_URL
+from aiplayground.settings import GAME, LOBBY_NAME, ASIMOV_URL, RUN_ONCE
 from aiplayground.gameservers import all_games, BaseGame
 from aiplayground.exceptions import (
     GameFull,
@@ -14,14 +14,14 @@ from flaskplusplus.logging import logger
 
 class GameServer(socketio.ClientNamespace):
     game: BaseGame
-    gamename: str
+    game_name: str
     name: str
     server_id: Optional[str]
 
     def __init__(self, gamename=GAME, name=LOBBY_NAME):
         super().__init__()
         self.game = all_games[gamename]()
-        self.gamename = gamename
+        self.game_name = gamename
         self.name = name
 
     def on_connect(self):
@@ -30,7 +30,7 @@ class GameServer(socketio.ClientNamespace):
             "createroom",
             {
                 "name": self.name,
-                "game": self.gamename,
+                "game": self.game_name,
                 "maxplayers": self.game.max_players,
             },
         )
@@ -123,6 +123,12 @@ class GameServer(socketio.ClientNamespace):
                 "finish",
                 {"normal": True, "scores": self.game.score(), "roomid": self.server_id},
             )
+            if RUN_ONCE:
+                sio.disconnect()
+            else:
+                self.game = all_games[self.game_name]()
+                self.on_connect()
+
         except AsimovServerError as e:
             logger.error(e)
 

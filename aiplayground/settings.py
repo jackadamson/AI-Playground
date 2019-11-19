@@ -9,10 +9,12 @@ ASIMOV_URL = env.str("ASIMOV_URL", default="http://127.0.0.1:5000")
 EMAIL = env.str("EMAIL", default="")
 PASSWORD = env.str("PASSWORD", default="")
 
+# For Game Server of player, whether to keep playing after one game
+RUN_ONCE = env.bool("RUN_ONCE", default=False)
+
 # Settings for a game server
 GAME = env.str("ASIMOV_GAME", default="ScissorsPaperRock")
 LOBBY_NAME = env.str("ASIMOV_LOBBY_NAME", default=f"A {GAME} lobby")
-RUN_ONCE = env.bool("RUN_ONCE", default=False)
 
 
 class Settings:
