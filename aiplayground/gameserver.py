@@ -1,6 +1,7 @@
 import socketio
 import json
 from typing import Optional
+from enum import Enum, auto
 from aiplayground.settings import GAME, LOBBY_NAME, ASIMOV_URL, RUN_ONCE
 from aiplayground.gameservers import all_games, BaseGame
 from aiplayground.exceptions import (
@@ -9,14 +10,33 @@ from aiplayground.exceptions import (
     GameCompleted,
     AsimovServerError,
 )
+from aiplayground.utils.clients import expect
+from aiplayground.messages import (
+    CreateRoomMessage,
+    RoomCreatedMessage,
+    RegisterMessage,
+    JoinSuccessMessage,
+    JoinFailMessage,
+    GameUpdateMessage,
+    PlayerMoveMessage,
+    FinishMessage,
+)
 from flaskplusplus.logging import logger
+
+
+class GameServerState(Enum):
+    CONNECTING = auto()
+    LOBBY = auto()
+    STARTING = auto()
+    PLAYING = auto()
+    FINISHED = auto()
 
 
 class GameServer(socketio.ClientNamespace):
     game: BaseGame
     game_name: str
     name: str
-    server_id: Optional[str]
+    room_id: Optional[str]
 
     def __init__(self, gamename=GAME, name=LOBBY_NAME):
         super().__init__()
@@ -26,103 +46,82 @@ class GameServer(socketio.ClientNamespace):
 
     def on_connect(self):
         logger.info("Connected")
-        self.emit(
-            "createroom",
-            {
-                "name": self.name,
-                "game": self.game_name,
-                "maxplayers": self.game.max_players,
-            },
-        )
+        CreateRoomMessage(
+            name=self.name, game=self.game_name, maxplayers=self.game.max_players
+        ).send(sio=self)
 
-    def on_roomcreated(self, data):
+    def send_start(self):
+        GameUpdateMessage(
+            visibility="broadcast",
+            roomid=self.room_id,
+            board=self.game.show_board(),
+            turn=self.game.players[self.game.turn],
+            epoch=self.game.movenumber,
+        ).send(sio=self)
+
+    @expect(RoomCreatedMessage)
+    def on_roomcreated(self, msg: RoomCreatedMessage):
         """
         Receives confirmation that a roomcreated was created
-        :property roomid
         """
-        # TODO: Add validation of input against schema
         logger.info("Successfully created room")
-        logger.debug(json.dumps(data, indent=2))
-        self.server_id = data["roomid"]
+        self.room_id = msg.roomid
 
-    def on_register(self, data):
+    @expect(RegisterMessage)
+    def on_register(self, msg: RegisterMessage):
         """
-        Receives request from player to join lobby
-        :property roomid
-        :property playerid
+        Player requests to join a lobby
         """
-        # TODO: Add validation of input against schema
-        logger.info("Received player registration")
-        logger.debug(json.dumps(data, indent=2))
         try:
-            self.game.add_player(data["playerid"])
+            self.game.add_player(msg.playerid)
             board = self.game.show_board()
-            self.emit(
-                "joinsuccess", {"playerid": data["playerid"], "roomid": data["roomid"]}
-            )
-            if board is not None:
-                self.emit(
-                    "gameupdate",
-                    {
-                        "visibility": "broadcast",
-                        "roomid": data["roomid"],
-                        "board": self.game.show_board(),
-                        "turn": self.game.players[self.game.turn],
-                        "epoch": self.game.movenumber,
-                    },
+            if board is None:
+                # Game is not ready to start
+                JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid).send(
+                    sio=self
+                )
+            else:
+                # TODO: Remove race condition if multiple people join at same time for last to join
+                # Specifically if A joins, then B joins, is receieved and acknowledged, and send_start is sent before
+                # A is received by broker
+                JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid).send(
+                    sio=self, callback=self.send_start
                 )
         except (GameFull, ExistingPlayer) as e:
             logger.warning(f"Player failed to join with error: {e}")
-            self.emit(
-                "joinfail",
-                {
-                    "playerid": data["playerid"],
-                    "roomid": data["roomid"],
-                    "reason": repr(e),
-                },
-            )
+            JoinFailMessage(
+                playerid=msg.playerid, roomid=msg.roomid, reason=repr(e)
+            ).send(sio=self)
 
-    def on_playermove(self, data):
+    @expect(PlayerMoveMessage)
+    def on_playermove(self, msg: PlayerMoveMessage):
         """
         Player sends a move
-        :property roomid
-        :property playerid
-        :property move
-        :property stateid
         """
-        # TODO: Add validation of input against schema
-        # TODO: Handle exceptions that can be raised
-        logger.info(f"Player made move:\n{json.dumps(data, indent=2)}")
+        # TODO: Handle exceptions that can be raised (eg. Illegal move)
         try:
-            self.game.move(data["playerid"], data["move"])
-            self.emit(
-                "gameupdate",
-                {
-                    "visibility": "broadcast",
-                    "roomid": data["roomid"],
-                    "board": self.game.show_board(),
-                    "turn": self.game.players[self.game.turn],
-                    "epoch": self.game.movenumber,
-                    "stateid": data["stateid"],
-                },
-            )
+            self.game.move(msg.playerid, msg.move)
+            GameUpdateMessage(
+                visibility="broadcast",
+                roomid=msg.roomid,
+                board=self.game.show_board(),
+                turn=self.game.players[self.game.turn],
+                epoch=self.game.movenumber,
+                stateid=msg.stateid,
+            ).send(sio=self)
         except GameCompleted:
             self.game.playing = False
-            self.emit(
-                "gameupdate",
-                {
-                    "visibility": "broadcast",
-                    "roomid": data["roomid"],
-                    "board": self.game.show_board(),
-                    "turn": None,
-                    "epoch": self.game.movenumber,
-                    "stateid": data["stateid"],
-                },
-            )
-            self.emit(
-                "finish",
-                {"normal": True, "scores": self.game.score(), "roomid": self.server_id},
-            )
+            GameUpdateMessage(
+                visibility="broadcast",
+                roomid=msg.roomid,
+                board=self.game.show_board(),
+                turn=None,
+                epoch=self.game.movenumber,
+                stateid=msg.stateid,
+            ).send(sio=self)
+            FinishMessage(
+                normal=True, scores=self.game.score(), roomid=self.room_id
+            ).send(sio=self)
             if RUN_ONCE:
                 sio.disconnect()
             else:

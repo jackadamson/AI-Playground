@@ -1,7 +1,7 @@
-from jsonschema import validate, ValidationError
 import json
+from jsonschema import validate, ValidationError
 from functools import wraps
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple, Callable, Type
 from flask import request
 from flaskplusplus import logger
 from aiplayground.exceptions import (
@@ -12,6 +12,7 @@ from aiplayground.exceptions import (
     UnauthorizedPlayer,
     PlayerNotInRoom,
 )
+from aiplayground.messages import MessageBase
 from aiplayground.api.rooms import Room
 from aiplayground.api.players import Player
 
@@ -48,13 +49,16 @@ def get_room_player(
     return room, player
 
 
-def expect(schema: dict):
-    def decorator(f: callable):
+def expect(message_type: Type[MessageBase]):
+    def decorator(f: Callable[..., None]):
         @wraps(f)
-        def wrapper(self: "GameRoom", data: dict):
-            logger.debug(f"Receieved {f.__name__} message:\n{json.dumps(data, indent=2)}\n")
+        def wrapper(self: "GameRoom", data: dict = None):
+            if data is None:
+                data = dict()
+            logger.debug(f"Receieved data:\n{json.dumps(data, indent=2)}")
+            m = {k: v for k, v in data.items() if v is not None}
             try:
-                validate(data, schema)
+                validate(m, message_type.schema)
             except ValidationError as e:
                 logger.warning(f"Validation encountered for {f.__name__}: {e.message}")
                 self.emit(
@@ -68,7 +72,9 @@ def expect(schema: dict):
                 )
                 return
             try:
-                return f(self, sid=request.sid, **data)
+                msg = message_type(**data)
+                logger.debug(f"Receieved message:\n{msg!r}")
+                return f(self, sid=request.sid, msg=msg)
             except AsimovErrorBase as e:
                 logger.exception(e)
                 self.emit(

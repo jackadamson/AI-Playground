@@ -6,11 +6,21 @@ import time
 import requests
 from flaskplusplus.logging import logger
 from aiplayground.settings import ASIMOV_URL, EMAIL, PASSWORD, RUN_ONCE
+from aiplayground.utils.clients import expect
+from aiplayground.messages import (
+    GamestateMessage,
+    JoinMessage,
+    JoinedMessage,
+    FinishedMessage,
+    ListMessage,
+    RoomsMessage,
+    MoveMessage,
+)
 
 
 class PlayerClient(socketio.ClientNamespace):
     player_id: Optional[str] = None
-    server_id: Optional[str] = None
+    room_id: Optional[str] = None
     game_name: Optional[str] = None
     lobby_name: Optional[str] = None
 
@@ -19,44 +29,49 @@ class PlayerClient(socketio.ClientNamespace):
 
     def on_connect(self):
         logger.info("I'm connected!")
-        self.server_id = None
+        logger.info("In debug!")
+        self.room_id = None
         self.player_id = None
         self.game_name = None
         self.lobby_name = None
         self.emit("list")
 
-    def on_rooms(self, data: dict):
-        logger.info(f"Received list of rooms:\n{json.dumps(data, indent=2)}")
-        if self.server_id is not None:
+    @expect(RoomsMessage)
+    def on_rooms(self, msg: RoomsMessage):
+        if self.room_id is not None:
             return
         lobbies = [
-            (k, v["game"], v["name"]) for k, v in data.items() if v["status"] == "lobby"
+            (k, v["game"], v["name"])
+            for k, v in msg.rooms.items()
+            if v["status"] == "lobby"
         ]
         if not lobbies:
-            logger.info("No active lobbies found, sleeping for 10s")
+            logger.warning("No active lobbies found, sleeping for 10s")
             time.sleep(10)
-            self.emit("list")
+            ListMessage().send(sio=self)
             return
-        self.server_id, self.game_name, self.lobby_name = lobbies[0]
-        self.emit("join", {"roomid": self.server_id, "name": "Some Player"})
+        self.room_id, self.game_name, self.lobby_name = lobbies[0]
+        JoinMessage(roomid=self.room_id, name="Some Player").send(sio=self)
 
-    def on_joined(self, data):
-        logger.info(f"I received a joined message:\n{json.dumps(data, indent=2)}")
-        self.player_id = data["playerid"]
+    @expect(JoinedMessage)
+    def on_joined(self, msg: JoinedMessage):
+        self.player_id = msg.playerid
+        self.room_id = msg.roomid
 
-    def on_gamestate(self, data):
-        logger.info(f"I received a board message:\n{json.dumps(data['board'], indent=2)}")
-        if data["turn"] == self.player_id:
+    @expect(GamestateMessage)
+    def on_gamestate(self, msg: GamestateMessage):
+        if msg.turn == self.player_id and msg.turn is not None:
             logger.info("It's my move!")
             move = random.choice(["scissors", "paper", "rock"])
-            self.emit(
-                "move", {"roomid": self.server_id, "playerid": self.player_id, "move": {"move": move}}
-            )
+            MoveMessage(
+                roomid=self.room_id, playerid=self.player_id, move={"move": move}
+            ).send(sio=self)
 
-    def on_finished(self, data):
-        if data["normal"]:
+    @expect(FinishedMessage)
+    def on_finished(self, msg: FinishedMessage):
+        if msg.normal:
             logger.info("Game finished normally")
-            score = data["scores"][self.player_id]
+            score = msg.scores[self.player_id]
             if score > 0:
                 logger.info("We won :)")
             elif score == 0:
@@ -69,13 +84,13 @@ class PlayerClient(socketio.ClientNamespace):
             else:
                 self.on_connect()
         else:
-            logger.info(f"Game finished with error: {data['reason']}")
+            logger.info(f"Game finished with error: {msg.reason}")
 
     def on_fail(self, data):
         logger.info(f"Received fail:\n{json.dumps(data, indent=2)}")
 
     def on_disconnect(self):
-        logger.info("I'm disconnected!")
+        logger.info("Disconnected!")
 
 
 def main():
