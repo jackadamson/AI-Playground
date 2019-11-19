@@ -158,8 +158,7 @@ class GameRoom(Namespace):
         """
         Server notifies that the game has finished
         """
-        # TODO: Add validation of game state (eg. not finished)
-        # TODO: Just a ton of validation here in general
+        # TODO: Validation around server sending back acceptable scores
         logger.info("Received finish event")
         room, _ = get_room_player(sid, msg.roomid, None)
         if room.status == "finished":
