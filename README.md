@@ -1,6 +1,6 @@
 # Asimov's Playground
 
-A boardgame tournament framework for use by both AI agents and Humans
+A board game tournament framework for use by both AI agents and Humans
 
 ## Installation
 

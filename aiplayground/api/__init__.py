@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restplus import Api
 from flaskplusplus.auth import auth_api, auth_schema
-from asimovsplayground.api.rooms import rooms_api, all_schemas as rooms_schemas
-from asimovsplayground.api.players import players_api, all_schemas as players_schemas
+from aiplayground.api.rooms import rooms_api, all_schemas as rooms_schemas
+from aiplayground.api.players import players_api, all_schemas as players_schemas
 
 authorizations = {
     "basicauth": {"type": "basic"},

@@ -1,6 +1,6 @@
 from flask_restplus import Model, fields
-from asimovsplayground.api.players import player_schema
-from asimovsplayground.api.rooms.models import GameState
+from aiplayground.api.players import player_schema
+from aiplayground.api.rooms.models import GameState
 
 game_state_schema = Model(
     "Game State",

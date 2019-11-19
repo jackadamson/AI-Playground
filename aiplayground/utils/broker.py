@@ -3,19 +3,19 @@ from functools import wraps
 from typing import TYPE_CHECKING, Optional, Tuple
 from flask import request
 from flaskplusplus import logger
-from asimovsplayground.exceptions import (
-    AsimovApiExceptionBase,
+from aiplayground.exceptions import (
+    AsimovErrorBase,
     NoSuchPlayer,
     NoSuchRoom,
     UnauthorizedGameServer,
     UnauthorizedPlayer,
     PlayerNotInRoom,
 )
-from asimovsplayground.api.rooms import Room
-from asimovsplayground.api.players import Player
+from aiplayground.api.rooms import Room
+from aiplayground.api.players import Player
 
 if TYPE_CHECKING:
-    from asimovsplayground.broker import GameRoom
+    from aiplayground.broker import GameRoom
 
 
 def get_room_player(
@@ -67,7 +67,7 @@ def expect(schema: dict):
                 return
             try:
                 return f(self, sid=request.sid, **data)
-            except AsimovApiExceptionBase as e:
+            except AsimovErrorBase as e:
                 logger.exception(e)
                 self.emit(
                     "fail",

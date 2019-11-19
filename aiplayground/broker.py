@@ -3,7 +3,7 @@ from flask import request
 from flask_socketio import Namespace
 from flaskplusplus import logger
 from flaskplusplus.utils import optional_jwt_in_request
-from asimovsplayground.schemas import (
+from aiplayground.schemas import (
     createroom_schema,
     gameupdate_schema,
     join_schema,
@@ -12,14 +12,14 @@ from asimovsplayground.schemas import (
     finish_schema,
     joinsuccess_schema,
 )
-from asimovsplayground.utils.broker import expect, get_room_player
-from asimovsplayground.exceptions import (
+from aiplayground.utils.broker import expect, get_room_player
+from aiplayground.exceptions import (
     GameNotRunning,
     GameAlreadyStarted,
     NotPlayersTurn,
     NoSuchRoom,
 )
-from asimovsplayground.messages import (
+from aiplayground.messages import (
     FinishedMessage,
     GamestateMessage,
     JoinedMessage,
@@ -27,8 +27,8 @@ from asimovsplayground.messages import (
     RegisterMessage,
     RoomCreatedMessage,
 )
-from asimovsplayground.api.rooms import Room, GameState
-from asimovsplayground.api.players import Player
+from aiplayground.api.rooms import Room, GameState
+from aiplayground.api.players import Player
 
 
 class GameRoom(Namespace):

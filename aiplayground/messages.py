@@ -2,7 +2,7 @@ from dataclasses import dataclass, InitVar, asdict
 from typing import Optional, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from asimovsplayground.broker import GameRoom
+    from aiplayground.broker import GameRoom
 
 
 @dataclass

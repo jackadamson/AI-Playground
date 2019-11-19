@@ -4,6 +4,16 @@ from secrets import token_hex
 env = Env()
 env.read_env()
 
+# URL of the asimov API/broker
+ASIMOV_URL = env.str("ASIMOV_URL", default="http://127.0.0.1:5000")
+EMAIL = env.str("EMAIL", default="")
+PASSWORD = env.str("PASSWORD", default="")
+
+# Settings for a game server
+GAME = env.str("ASIMOV_GAME", default="ScissorsPaperRock")
+LOBBY_NAME = env.str("ASIMOV_LOBBY_NAME", default=f"A {GAME} lobby")
+RUN_ONCE = env.bool("RUN_ONCE", default=False)
+
 
 class Settings:
     SQLALCHEMY_DATABASE_URI = env.str('DATABASE_URL', default='sqlite:///:memory:')

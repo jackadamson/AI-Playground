@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, Resource
-from asimovsplayground.api.rooms.models import Room
-from asimovsplayground.api.rooms.schemas import room_schema
+from aiplayground.api.rooms.models import Room
+from aiplayground.api.rooms.schemas import room_schema
 
 rooms_api = Namespace("Room", description="Game Rooms")
 

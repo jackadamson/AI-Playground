@@ -1,5 +1,5 @@
 from flask_restplus import Namespace, Resource
-from asimovsplayground.api.players.models import Player
+from aiplayground.api.players.models import Player
 
 players_api = Namespace("Player", description="Game Players")
 
