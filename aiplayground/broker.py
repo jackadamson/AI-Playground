@@ -1,4 +1,4 @@
-from flask import request
+from functools import partial
 from flask_socketio import Namespace
 from flaskplusplus import logger
 from flaskplusplus.utils import optional_jwt_in_request
@@ -25,21 +25,24 @@ from aiplayground.messages import (
     PlayerMoveMessage,
     RegisterMessage,
     RoomCreatedMessage,
+    JoinAcknowledgement,
 )
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.api.players import Player
 from aiplayground.types import (
     GameServerSID,
     PlayerSID,
+    RoomId,
+    PlayerId,
 )
 
 
 class GameBroker(Namespace):
-    def on_connect(self):
-        logger.debug(f"Connection: sid={request.sid!r}")
-
-    def on_disconnect(self):
-        logger.debug(f"Disconnect: sid={request.sid!r}")
+    def acknowledge_join(self, room_id: RoomId, player_id: PlayerId):
+        room = Room.get(room_id)
+        JoinAcknowledgement(roomid=room_id, playerid=player_id).send(
+            sio=self, to=room.server_sid
+        )
 
     @expect(CreateRoomMessage)
     def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage):
@@ -87,7 +90,13 @@ class GameBroker(Namespace):
         self.enter_room(player.sid, f"room-{room.id}")
         JoinedMessage(
             roomid=msg.roomid, playerid=msg.playerid, gamerole=msg.gamerole
-        ).send(self, to=player.sid)
+        ).send(
+            self,
+            to=player.sid,
+            callback=partial(
+                self.acknowledge_join, room_id=msg.roomid, player_id=msg.playerid
+            ),
+        )
 
     @expect(JoinFailMessage)
     def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage):

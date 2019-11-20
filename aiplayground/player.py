@@ -78,6 +78,8 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(GamestateMessage)
     def on_gamestate(self, msg: GamestateMessage):
+        if msg.roomid != self.room_id:
+            return
         move = self.player.update(board=msg.board, turn=msg.turn)
         if move is not None:
             MoveMessage(roomid=self.room_id, playerid=self.player_id, move=move).send(
@@ -86,6 +88,8 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(FinishMessage)
     def on_finish(self, msg: FinishMessage):
+        if msg.roomid != self.room_id:
+            return
         if msg.normal:
             logger.debug("Game finished normally")
             score = msg.scores[self.player_id]
