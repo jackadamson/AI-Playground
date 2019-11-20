@@ -1,7 +1,7 @@
 import json
 from dataclasses_jsonschema import JsonSchemaValidationError
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional
+from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional, Any
 from flask import request, has_request_context
 from flaskplusplus import logger
 from aiplayground.exceptions import AsimovErrorBase
@@ -12,7 +12,9 @@ if TYPE_CHECKING:
     from aiplayground.player import PlayerClient
     from aiplayground.gameserver import GameServer
 
-SocketioType = Union["GameBroker", "PlayerClient", "GameServer"]
+    SocketioType = Union[GameBroker, PlayerClient, GameServer]
+else:
+    SocketioType = Any
 
 
 def expect(

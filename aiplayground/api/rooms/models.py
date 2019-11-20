@@ -5,7 +5,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from datetime import datetime
 from flaskplusplus import Base
 from flaskplusplus.database import JSONColumn
-import json
 from aiplayground.types import (
     PlayerId,
     RoomId,

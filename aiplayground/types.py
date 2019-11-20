@@ -1,6 +1,5 @@
 from typing import NewType, Union, Dict, Any
 from dataclasses_jsonschema import JsonSchemaMixin, FieldEncoder
-from mypy_extensions import TypedDict
 
 PlayerId = NewType("PlayerId", str)
 RoomId = NewType("RoomId", str)
