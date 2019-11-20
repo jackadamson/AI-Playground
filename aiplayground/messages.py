@@ -2,20 +2,31 @@ from dataclasses import dataclass, asdict
 from typing import Optional, Dict
 import aiplayground.schemas as schemas
 from flaskplusplus import logger
+from aiplayground.exceptions import all_exceptions
 
 
 @dataclass
 class MessageBase:
     schema = dict()
+    _callback = None
 
     def send(self, sio, to: Optional[str] = None, callback: Optional[callable] = None):
         message_name = self.__class__.__name__[:-7].lower()
+        self._callback = callback
         if to is None:
             logger.debug(f"Sending message {message_name}:\n{self!r}")
-            sio.emit(message_name, asdict(self), callback=callback)
+            sio.emit(message_name, asdict(self), callback=self.callback)
         else:
             logger.debug(f"Sending message {message_name} to {to!r}:\n{self!r}")
-            sio.emit(message_name, asdict(self), room=to, callback=callback)
+            sio.emit(message_name, asdict(self), room=to, callback=self.callback)
+
+    def callback(self, msgtype=None, error=None):
+        if msgtype == "fail":
+            raise all_exceptions[error["error"]](
+                f"{error['details']!r},\nReceived in response to: {self!r}"
+            )
+        elif self._callback:
+            self._callback()
 
 
 # Sent from broker
