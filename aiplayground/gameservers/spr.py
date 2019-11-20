@@ -15,10 +15,10 @@ class ScissorsPaperRockServer(BaseGameServer):
     description = "Scissors beats Paper, Paper beats Rock, Rock beats Scissors."
     move_map = {"scissors": 0, "paper": 1, "rock": 2}
     winner: Optional[PlayerId] = None
-    board: Dict[GameRole, Optional[str]]
+    board: Board
 
     def init_game(self):
-        self.board = {player_a: None, player_b: None}
+        self.board = Board({player_a: None, player_b: None})
         self.turn = self.roles[player_a]
 
     def show_board(self) -> Board:
@@ -48,13 +48,13 @@ class ScissorsPaperRockServer(BaseGameServer):
             self.board[player_a] = m
             self.turn = self.roles[player_b]
         elif m == self.board[player_b]:
-            self.board = {player_a: None, player_b: None}
+            self.board = Board({player_a: None, player_b: None})
             self.turn = self.roles[player_a]
         else:
             self.board[player_b] = m
             raise GameCompleted
 
-    def score(self) -> Dict[str, int]:
+    def score(self) -> Dict[PlayerId, int]:
         first_move = self.move_map[self.board[player_a]]
         second_move = self.move_map[self.board[player_b]]
         if second_move == (first_move + 1) % 3:

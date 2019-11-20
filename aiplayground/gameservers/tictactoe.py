@@ -3,7 +3,7 @@ import random
 from flaskplusplus.logging import logger
 from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted, IllegalMove
-from aiplayground.types import GameRole, PlayerId, Move
+from aiplayground.types import GameRole, PlayerId, Move, Board
 
 player_x = GameRole("x")
 player_o = GameRole("o")
@@ -26,7 +26,7 @@ class TicTacToeServer(BaseGameServer):
     }
 
     def init_game(self):
-        self.board = {"grid": [[None for _i in range(3)] for _j in range(3)]}
+        self.board = Board({"grid": [[None for _i in range(3)] for _j in range(3)]})
         self.turn = self.roles[player_x]
 
     def asign_role(self, player_id: PlayerId) -> Optional[GameRole]:
@@ -69,14 +69,14 @@ class TicTacToeServer(BaseGameServer):
             next_role = player_o if player_role == player_x else player_x
             self.turn = self.roles[next_role]
 
-    def score(self) -> Dict[str, int]:
+    def score(self) -> Dict[PlayerId, int]:
         if self.winner is None:
             # Draw
             return {k: 0 for k in self.players}
         else:
             return {k: 1 if k == self.winner else -1 for k in self.players}
 
-    def show_board(self) -> Optional[dict]:
+    def show_board(self) -> Board:
         board_repr = "\n -+-+-\n ".join(
             "|".join(" " if cell is None else cell for cell in row)
             for row in self.board["grid"]

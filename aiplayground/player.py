@@ -70,6 +70,7 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(JoinedMessage)
     def on_joined(self, msg: JoinedMessage):
+        assert self.game_name is not None
         self.player_id = msg.playerid
         self.room_id = msg.roomid
         logger.info(f"Joined Game: {self.room_name}({self.game_name})")
@@ -80,6 +81,11 @@ class PlayerClient(socketio.ClientNamespace):
     def on_gamestate(self, msg: GamestateMessage):
         if msg.roomid != self.room_id:
             return
+        assert self.player is not None
+        assert self.room_id is not None
+        assert self.player_id is not None
+        if msg.roomid != self.room_id:
+            return
         move = self.player.update(board=msg.board, turn=msg.turn)
         if move is not None:
             MoveMessage(roomid=self.room_id, playerid=self.player_id, move=move).send(
@@ -88,6 +94,8 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(FinishMessage)
     def on_finish(self, msg: FinishMessage):
+        assert self.player_id is not None
+        assert msg.scores is not None
         if msg.roomid != self.room_id:
             return
         if msg.normal:

@@ -52,7 +52,7 @@ class GameBroker(Namespace):
         room = Room.create(
             name=msg.name, game=msg.game, maxplayers=msg.maxplayers, server_sid=sid
         )
-        logger.info(f"Registered Gameserver with room: {room.id}")
+        logger.debug(f"Registered Gameserver with room: {room.id}")
         RoomCreatedMessage(roomid=room.id).send(self, to=sid)
 
     @expect(JoinMessage)
@@ -67,7 +67,7 @@ class GameBroker(Namespace):
             user_id=identity["id"] if identity is not None else None,
             sid=sid,
         )
-        logger.info("Player requested to join a room")
+        logger.debug("Player requested to join a room")
         player_id = player.id
         room: Room = Room.get(msg.roomid, relax=True)
         if room is None:
@@ -75,7 +75,7 @@ class GameBroker(Namespace):
         elif room.status != "lobby":
             raise GameAlreadyStarted
         else:
-            logger.info(f"Registering user")
+            logger.debug(f"Registering user")
             RegisterMessage(roomid=msg.roomid, playerid=player_id).send(
                 self, to=room.server_sid
             )
@@ -86,6 +86,7 @@ class GameBroker(Namespace):
         Server confirmed a player joining the lobby
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
+        assert player is not None
         player.update(joined=True, game_role=msg.gamerole)
         self.enter_room(player.sid, f"room-{room.id}")
         JoinedMessage(
@@ -104,6 +105,7 @@ class GameBroker(Namespace):
         Server responds that a player failed to join the lobby
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
+        assert player is not None
         self.emit(
             "fail",
             {"error": "registrationFailed", "reason": msg.reason},
@@ -121,6 +123,7 @@ class GameBroker(Namespace):
 
         if msg.visibility == "private":
             room.update(status="playing", turn=msg.turn)
+            assert player is not None
             GamestateMessage(
                 board=msg.board, turn=msg.turn, roomid=msg.roomid, playerid=msg.playerid
             ).send(self, to=player.sid)
@@ -133,7 +136,7 @@ class GameBroker(Namespace):
                     roomid=msg.roomid,
                     playerid=msg.playerid,
                 )
-                logger.info(
+                logger.debug(
                     f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
                 )
                 r.send(sio=self, to=room.broadcast_sid)
@@ -175,8 +178,8 @@ class GameBroker(Namespace):
         Server notifies that the game has finished
         """
         # TODO: Validation around server sending back acceptable scores
-        logger.info("Received finish event")
         room, _ = get_room_player(sid, msg.roomid, None)
+        logger.info("Game finished")
         if room.status == "finished":
             raise GameNotRunning
         else:

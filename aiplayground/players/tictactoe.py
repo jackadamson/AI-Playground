@@ -1,13 +1,15 @@
-from aiplayground.players.base import BasePlayer
 import random
 from flaskplusplus.logging import logger
+from aiplayground.types import GameName, Move
+from aiplayground.players.base import BasePlayer
 
 
 class TicTacToeRandomPlayer(BasePlayer):
-    gamename = "TicTacToe"
+    gamename: GameName = GameName("TicTacToe")
     description = "A random player for tic tac toe"
 
-    def get_move(self) -> dict:
+    def get_move(self) -> Move:
+        assert self.board is not None
         logger.debug(self.board)
         available_moves = [
             {"row": row, "col": col}
@@ -16,4 +18,4 @@ class TicTacToeRandomPlayer(BasePlayer):
             if self.board["grid"][row][col] is None
         ]
         random.choice(available_moves)
-        return random.choice(available_moves)
+        return Move(random.choice(available_moves))

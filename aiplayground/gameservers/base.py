@@ -12,7 +12,7 @@ from aiplayground.types import GameRole, PlayerId, Board, Move
 
 
 class BaseGameServer(ABC):
-    board: Optional[dict] = None
+    board: Board = Board(dict())
     playing: bool = False
     movenumber: int = 0
     max_players: int = 2
@@ -51,7 +51,9 @@ class BaseGameServer(ABC):
         self.make_move(
             player_id=player_id, player_role=self.players.get(player_id), move=move
         )
-        return self.show_board()
+        board = self.show_board()
+        assert board is not None
+        return board
 
     def start(self):
         self.playing = True
@@ -85,7 +87,7 @@ class BaseGameServer(ABC):
         """
         raise NotImplementedError
 
-    def show_board(self) -> Optional[Board]:
+    def show_board(self) -> Board:
         """
         Returns a dictionary representing the game state if the game
         If the game is waiting for more players to join, returns None

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable
 import aiplayground.schemas as schemas
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
@@ -23,7 +23,7 @@ class MessageBase:
     _callback = None
 
     def send(
-        self, sio, to: Optional[SioSID] = None, callback: Optional[callable] = None
+        self, sio, to: Optional[SioSID] = None, callback: Optional[Callable] = None
     ):
         message_name = self.__class__.__name__[:-7].lower()
         self._callback = callback
@@ -53,9 +53,9 @@ class GamestateMessage(MessageBase):
 
     # TODO: Add schema
     board: Board
-    playerid: PlayerId
     roomid: RoomId
-    turn: PlayerId
+    playerid: Optional[PlayerId]
+    turn: Optional[PlayerId]
 
 
 @dataclass

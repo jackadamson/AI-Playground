@@ -79,5 +79,4 @@ class BoardState(Base):
         try:
             return cls.get(state=state).id
         except NoResultFound:
-            print(f"Creating state:\n{json.dumps(state, indent=2)}")
             return cls.create(state=state).id

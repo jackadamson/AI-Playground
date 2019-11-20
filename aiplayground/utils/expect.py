@@ -1,7 +1,7 @@
 import json
 from jsonschema import validate, ValidationError
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, Type, Union
+from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional
 from flask import request, has_request_context
 from flaskplusplus import logger
 from aiplayground.exceptions import AsimovErrorBase
@@ -12,13 +12,15 @@ if TYPE_CHECKING:
     from aiplayground.player import PlayerClient
     from aiplayground.gameserver import GameServer
 
+SocketioType = Union["GameBroker", "PlayerClient", "GameServer"]
 
-def expect(message_type: Type[MessageBase]):
+
+def expect(
+    message_type: Type[MessageBase],
+) -> Callable[[Callable], Callable[[SocketioType], Optional[Tuple]]]:
     def decorator(f: Callable[..., None]):
         @wraps(f)
-        def wrapper(
-            self: Union["GameBroker", "PlayerClient", "GameServer"], data: dict = None
-        ):
+        def wrapper(self: SocketioType, data: dict = None):
             if data is None:
                 data = dict()
             m = {k: v for k, v in data.items() if v is not None}

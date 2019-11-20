@@ -118,6 +118,7 @@ class GameServer(socketio.ClientNamespace):
         Player sends a move
         """
         with self.lock:
+            assert self.room_id is not None
             try:
                 logger.debug("Starting player move")
                 self.game.move(msg.playerid, msg.move)
