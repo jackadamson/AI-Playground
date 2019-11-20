@@ -36,6 +36,7 @@ class PlayerClient(socketio.ClientNamespace):
         super().__init__(namespace=namespace)
 
     def on_connect(self):
+        # TODO: Handle reconnection properly
         logger.info("I'm connected!")
         logger.info("In debug!")
         self.room_id = None
