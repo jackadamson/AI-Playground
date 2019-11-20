@@ -3,6 +3,17 @@ from typing import Optional, Dict
 import aiplayground.schemas as schemas
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
+from aiplayground.types import (
+    PlayerId,
+    RoomId,
+    StateId,
+    Board,
+    Move,
+    GameRole,
+    PlayerName,
+    RoomName,
+    GameName,
+)
 
 
 @dataclass
@@ -38,10 +49,10 @@ class GamestateMessage(MessageBase):
     """
 
     # TODO: Add schema
-    board: dict
-    playerid: str
-    roomid: str
-    turn: str
+    board: Board
+    playerid: PlayerId
+    roomid: RoomId
+    turn: PlayerId
 
 
 @dataclass
@@ -52,9 +63,9 @@ class JoinedMessage(MessageBase):
     """
 
     # TODO: Add schema
-    playerid: str
-    roomid: str
-    gamerole: Optional[str] = None
+    playerid: PlayerId
+    roomid: RoomId
+    gamerole: Optional[GameRole] = None
 
 
 @dataclass
@@ -65,10 +76,10 @@ class PlayerMoveMessage(MessageBase):
     """
 
     # TODO: Add schema
-    move: dict
-    playerid: str
-    roomid: str
-    stateid: str
+    move: Move
+    playerid: PlayerId
+    roomid: RoomId
+    stateid: StateId
 
 
 @dataclass
@@ -79,8 +90,8 @@ class RegisterMessage(MessageBase):
     """
 
     # TODO: Add schema
-    playerid: str
-    roomid: str
+    playerid: PlayerId
+    roomid: RoomId
 
 
 @dataclass
@@ -91,7 +102,7 @@ class RoomCreatedMessage(MessageBase):
     """
 
     # TODO: Add schema
-    roomid: str
+    roomid: RoomId
 
 
 @dataclass
@@ -105,6 +116,18 @@ class RoomsMessage(MessageBase):
     rooms: dict
 
 
+@dataclass
+class JoinAcknowledgement(MessageBase):
+    """
+    Indicates a player has received a Joined event
+    :from broker
+    :to player
+    """
+
+    roomid: RoomId
+    playerid: PlayerId
+
+
 # Sent from server
 @dataclass
 class CreateRoomMessage(MessageBase):
@@ -114,8 +137,8 @@ class CreateRoomMessage(MessageBase):
     """
 
     schema = schemas.createroom_schema
-    name: str
-    game: str
+    name: RoomName
+    game: GameName
     maxplayers: int
 
 
@@ -127,9 +150,9 @@ class JoinSuccessMessage(MessageBase):
     """
 
     schema = schemas.joinsuccess_schema
-    playerid: str
-    roomid: str
-    gamerole: Optional[str] = None
+    playerid: PlayerId
+    roomid: RoomId
+    gamerole: Optional[GameRole] = None
 
 
 @dataclass
@@ -140,8 +163,8 @@ class JoinFailMessage(MessageBase):
     """
 
     schema = schemas.joinfail_schema
-    playerid: str
-    roomid: str
+    playerid: PlayerId
+    roomid: RoomId
     reason: Optional[str] = None
 
 
@@ -153,13 +176,13 @@ class GameUpdateMessage(MessageBase):
     """
 
     schema = schemas.gameupdate_schema
-    roomid: str
+    roomid: RoomId
     visibility: str
     epoch: int
-    board: dict
-    stateid: Optional[str] = None
-    playerid: Optional[str] = None
-    turn: Optional[str] = None
+    board: Board
+    stateid: Optional[StateId] = None
+    playerid: Optional[PlayerId] = None
+    turn: Optional[PlayerId] = None
 
 
 @dataclass
@@ -170,11 +193,11 @@ class FinishMessage(MessageBase):
     """
 
     schema = schemas.finish_schema
-    roomid: str
+    roomid: RoomId
     normal: bool
-    scores: Optional[Dict[str, int]] = None
+    scores: Optional[Dict[PlayerId, int]] = None
     reason: Optional[str] = None
-    fault: Optional[str] = None
+    fault: Optional[PlayerId] = None
 
 
 # Sent from player
@@ -186,8 +209,8 @@ class JoinMessage(MessageBase):
     """
 
     schema = schemas.join_schema
-    roomid: str
-    name: str
+    roomid: RoomId
+    name: PlayerName
 
 
 @dataclass
@@ -198,9 +221,9 @@ class MoveMessage(MessageBase):
     """
 
     schema = schemas.move_schema
-    playerid: str
-    roomid: str
-    move: dict
+    playerid: PlayerId
+    roomid: RoomId
+    move: Move
 
 
 @dataclass
