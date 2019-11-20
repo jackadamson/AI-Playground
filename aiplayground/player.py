@@ -13,6 +13,7 @@ from aiplayground.settings import (
     PASSWORD,
     RUN_ONCE,
     CONNECTION_RETRIES,
+    LEEROY_JENKINS,
 )
 from aiplayground.players import all_players, BasePlayer
 from aiplayground.utils.expect import expect
@@ -20,7 +21,7 @@ from aiplayground.messages import (
     GamestateMessage,
     JoinMessage,
     JoinedMessage,
-    FinishedMessage,
+    FinishMessage,
     ListMessage,
     RoomsMessage,
     MoveMessage,
@@ -54,7 +55,7 @@ class PlayerClient(socketio.ClientNamespace):
         lobbies = [
             (k, v["game"], v["name"])
             for k, v in msg.rooms.items()
-            if v["status"] == "lobby"
+            if v["status"] == "lobby" and v["game"] in all_players
         ]
         if not lobbies:
             logger.warning("No active lobbies found, sleeping for 2s")
@@ -69,6 +70,7 @@ class PlayerClient(socketio.ClientNamespace):
         self.player_id = msg.playerid
         self.room_id = msg.roomid
         self.player = all_players[self.game_name](gamerole=msg.gamerole)
+        logger.info(f"Player: {self.player_id!r}")
 
     @expect(GamestateMessage)
     def on_gamestate(self, msg: GamestateMessage):
@@ -79,8 +81,8 @@ class PlayerClient(socketio.ClientNamespace):
                 roomid=self.room_id, playerid=self.player_id, move={"move": move}
             ).send(sio=self)
 
-    @expect(FinishedMessage)
-    def on_finished(self, msg: FinishedMessage):
+    @expect(FinishMessage)
+    def on_finish(self, msg: FinishMessage):
         if msg.normal:
             logger.info("Game finished normally")
             score = msg.scores[self.player_id]
@@ -97,6 +99,13 @@ class PlayerClient(socketio.ClientNamespace):
                 self.on_connect()
         else:
             logger.error(f"Game finished with error: {msg.reason}")
+            if msg.fault == self.player_id:
+                logger.error("AND IT WAS ALL OUR FAULT D:")
+                if LEEROY_JENKINS:
+                    logger.error("But YOLO I'll try again")
+                    self.on_connect()
+                else:
+                    self.disconnect()
 
     def on_fail(self, data):
         logger.error(f"Received fail:\n{json.dumps(data, indent=2)}")

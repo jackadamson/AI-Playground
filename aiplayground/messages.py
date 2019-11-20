@@ -31,20 +31,6 @@ class MessageBase:
 
 # Sent from broker
 @dataclass
-class FinishedMessage(MessageBase):
-    """
-    :from broker
-    :to player
-    """
-
-    # TODO: Add schema
-    normal: bool
-    roomid: str
-    reason: Optional[str] = None
-    scores: Optional[Dict[str, int]] = None
-
-
-@dataclass
 class GamestateMessage(MessageBase):
     """
     :from broker
@@ -179,7 +165,7 @@ class GameUpdateMessage(MessageBase):
 @dataclass
 class FinishMessage(MessageBase):
     """
-    :from server
+    :from server or broker
     :to broker
     """
 
@@ -188,6 +174,7 @@ class FinishMessage(MessageBase):
     normal: bool
     scores: Optional[Dict[str, int]] = None
     reason: Optional[str] = None
+    fault: Optional[str] = None
 
 
 # Sent from player

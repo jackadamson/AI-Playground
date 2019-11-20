@@ -149,7 +149,6 @@ finish_schema = {
             "type": "boolean",
             "title": "Normal Finish",
             "description": "Whether the game finished normally through gameplay (as opposed to through an error)",
-            "pattern": "^([a-z0-9-]*)$",
         },
         "scores": {
             "type": "object",
@@ -159,6 +158,12 @@ finish_schema = {
             "additionalProperties": {"type": "integer", "minimum": -1, "maximum": 1},
         },
         "roomid": {"type": "string", "title": "Room ID", "pattern": "^([a-z0-9-]*)$"},
+        "reason": {"type": "string", "description": "Reason for abnormal end"},
+        "fault": {
+            "type": "string",
+            "description": "ID of the player who caused the fault",
+            "pattern": "^([a-z0-9-]*)$",
+        },
     },
     "additionalProperties": False,
 }

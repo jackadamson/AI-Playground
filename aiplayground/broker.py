@@ -17,17 +17,16 @@ from aiplayground.messages import (
     JoinFailMessage,
     JoinSuccessMessage,
     MoveMessage,
-    FinishMessage,
     ListMessage,
     RoomsMessage,
-    FinishedMessage,
+    FinishMessage,
     GamestateMessage,
     JoinedMessage,
     PlayerMoveMessage,
     RegisterMessage,
     RoomCreatedMessage,
 )
-from aiplayground.api.rooms import Room, GameState, BoardState
+from aiplayground.api.rooms import Room, GameState
 from aiplayground.api.players import Player
 
 
@@ -81,7 +80,7 @@ class GameBroker(Namespace):
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         player.update(joined=True, game_role=msg.gamerole)
-        self.enter_room(player.sid, room.id)
+        self.enter_room(player.sid, f"room-{room.id}")
         JoinedMessage(
             roomid=msg.roomid, playerid=msg.playerid, gamerole=msg.gamerole
         ).send(self, to=player.sid)
@@ -121,7 +120,7 @@ class GameBroker(Namespace):
                     roomid=msg.roomid,
                     playerid=msg.playerid,
                 )
-                r.send(sio=self, to=room.id)
+                r.send(sio=self, to=f"room-{room.id}")
             state = GameState.get(id=msg.stateid, room_id=msg.roomid, relax=True)
             if state is None:
                 GameState.create(
@@ -166,12 +165,7 @@ class GameBroker(Namespace):
             raise GameNotRunning
         else:
             room.update(status="finished")
-            FinishedMessage(
-                normal=msg.normal,
-                reason=msg.reason,
-                scores=msg.scores,
-                roomid=msg.roomid,
-            ).send(self, to=room.id)
+            msg.send(self, to=f"room-{room.id}")
 
     @expect(ListMessage)
     def on_list(self, sid: str, msg: ListMessage):

@@ -19,6 +19,7 @@ class Room(Base):
     turn = Column(Integer, nullable=True)
     normal_finish = Column(Boolean, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+    players = relationship("Player")
     # updated_at = Column(DateTime, onupdate=datetime.now)
 
 

@@ -18,7 +18,7 @@ from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,
     GameCompleted,
-    AsimovServerError,
+    IllegalMove,
 )
 from aiplayground.messages import (
     CreateRoomMessage,
@@ -108,7 +108,9 @@ class GameServer(socketio.ClientNamespace):
         """
         # TODO: Handle exceptions that can be raised (eg. Illegal move)
         try:
+            logger.debug("Starting player move")
             self.game.move(msg.playerid, msg.move)
+            logger.debug("Finished player move")
             GameUpdateMessage(
                 visibility="broadcast",
                 roomid=msg.roomid,
@@ -136,8 +138,15 @@ class GameServer(socketio.ClientNamespace):
                 self.game = all_games[self.game_name]()
                 self.on_connect()
 
-        except AsimovServerError as e:
-            logger.error(e)
+        except IllegalMove as e:
+            logger.exception(e)
+            FinishMessage(
+                normal=False,
+                roomid=self.room_id,
+                reason=e.details,
+                fault=msg.playerid,
+                scores={p: (-1 if p == msg.playerid else 1) for p in self.game.players},
+            ).send(sio=self)
 
     def on_fail(self, data):
         logger.error("error received:\n" + json.dumps(data, indent=2))

@@ -16,5 +16,5 @@ class Player(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=True)
     user = relationship("User", backref="players")
     room_id = Column(String, ForeignKey("rooms.id"), nullable=False)
-    room = relationship("Room", backref="players")
+    room = relationship("Room")
     schema = player_schema

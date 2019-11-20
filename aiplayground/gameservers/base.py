@@ -1,10 +1,12 @@
 from typing import Optional, Dict
 from abc import ABC, abstractmethod
+from jsonschema import validate, ValidationError
 from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,
     NotPlayersTurn,
     GameNotRunning,
+    IllegalMove,
 )
 
 
@@ -18,6 +20,7 @@ class BaseGameServer(ABC):
     turn: Optional[str] = None
     gamename: str = "BaseGame"
     description: str = "A base game"
+    schema: dict = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,9 +43,12 @@ class BaseGameServer(ABC):
     def move(self, player_id: str, move: dict) -> dict:
         if not self.playing:
             raise GameNotRunning
-
         if player_id != self.turn:
             raise NotPlayersTurn
+        try:
+            validate(move, self.schema)
+        except ValidationError as e:
+            raise IllegalMove(details=e.message) from e
         self.movenumber += 1
         self.make_move(
             player_id=player_id, player_role=self.players.get(player_id), move=move

@@ -19,6 +19,10 @@ CONNECTION_RETRIES = env.int("CONNECTION_RETRIES", default=5)
 GAME = env.str("ASIMOV_GAME", default="ScissorsPaperRock")
 LOBBY_NAME = env.str("ASIMOV_LOBBY_NAME", default=f"A {GAME} lobby")
 
+# For a player
+# Whether to keep playing new games after losing due to an illegal move
+LEEROY_JENKINS = env.bool("LEEROY_JENKINS", default=False)
+
 
 class Settings:
     SQLALCHEMY_DATABASE_URI = env.str("DATABASE_URL", default="sqlite:///:memory:")
