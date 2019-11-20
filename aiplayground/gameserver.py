@@ -144,7 +144,7 @@ class GameServer(socketio.ClientNamespace):
 def main():
     for i in range(CONNECTION_RETRIES):
         try:
-            sio = socketio.Client()
+            sio = socketio.Client(reconnection_attempts=CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
             sio.connect(ASIMOV_URL)

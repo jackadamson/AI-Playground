@@ -110,7 +110,7 @@ def main():
                 headers = {"Authorization": f"Bearer {token}"}
             else:
                 headers = {}
-            sio = socketio.Client()
+            sio = socketio.Client(reconnection_attempts=CONNECTION_RETRIES)
             player_client = PlayerClient()
             sio.register_namespace(player_client)
             sio.connect(ASIMOV_URL, headers=headers)
