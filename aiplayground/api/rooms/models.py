@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
@@ -14,6 +14,8 @@ from aiplayground.types import (
     GameName,
     Board,
     Move,
+    GameServerSID,
+    BroadcastSID,
 )
 from aiplayground.api.players import Player
 
@@ -24,14 +26,17 @@ class Room(Base):
     name: RoomName = Column(String, nullable=False)
     game: GameName = Column(String, nullable=False)
     maxplayers = Column(Integer, nullable=False)
-    server_sid = Column(String, nullable=False)
+    server_sid: GameServerSID = Column(String, nullable=False)
     status = Column(String, default="lobby")
     board: Board = Column(JSONColumn, default={})
     turn = Column(String, ForeignKey("players.id"), nullable=True)
     normal_finish = Column(Boolean, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
-    players = relationship("Player", foreign_keys=[Player.room_id])
-    # updated_at = Column(DateTime, onupdate=datetime.now)
+    players: List[Player] = relationship("Player", foreign_keys=[Player.room_id])
+
+    @property
+    def broadcast_sid(self):
+        return BroadcastSID(f"room-{self.id}")
 
 
 class GameState(Base):

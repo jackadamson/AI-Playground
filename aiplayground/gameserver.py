@@ -5,6 +5,8 @@ from time import sleep
 from typing import Optional
 from enum import Enum, auto
 from threading import Lock
+
+from aiplayground.types import GameName, RoomName, RoomId
 from aiplayground.utils.atomic import AtomicCounter
 from aiplayground.utils.expect import expect
 from aiplayground.settings import (
@@ -44,10 +46,10 @@ class GameServerState(Enum):
 
 class GameServer(socketio.ClientNamespace):
     game: BaseGameServer
-    game_name: str
-    name: str
+    game_name: GameName
+    name: RoomName
     lock: Lock
-    room_id: Optional[str]
+    room_id: Optional[RoomId]
     player_counter: AtomicCounter
 
     def __init__(self, gamename=GAME, name=LOBBY_NAME):

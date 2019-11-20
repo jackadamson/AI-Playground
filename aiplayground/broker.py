@@ -28,7 +28,10 @@ from aiplayground.messages import (
 )
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.api.players import Player
-from aiplayground.types import PlayerId, RoomId, RoomName, GameName, PlayerName
+from aiplayground.types import (
+    GameServerSID,
+    PlayerSID,
+)
 
 
 class GameBroker(Namespace):
@@ -39,7 +42,7 @@ class GameBroker(Namespace):
         logger.debug(f"Disconnect: sid={request.sid!r}")
 
     @expect(CreateRoomMessage)
-    def on_createroom(self, sid: str, msg: CreateRoomMessage):
+    def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage):
         """
         Server requests to create a game room
         """
@@ -50,7 +53,7 @@ class GameBroker(Namespace):
         RoomCreatedMessage(roomid=room.id).send(self, to=sid)
 
     @expect(JoinMessage)
-    def on_join(self, sid: str, msg: JoinMessage):
+    def on_join(self, sid: PlayerSID, msg: JoinMessage):
         """
         Player requests to join a game room
         """
@@ -75,7 +78,7 @@ class GameBroker(Namespace):
             )
 
     @expect(JoinSuccessMessage)
-    def on_joinsuccess(self, sid, msg: JoinSuccessMessage):
+    def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage):
         """
         Server confirmed a player joining the lobby
         """
@@ -87,7 +90,7 @@ class GameBroker(Namespace):
         ).send(self, to=player.sid)
 
     @expect(JoinFailMessage)
-    def on_joinfail(self, sid, msg: JoinFailMessage):
+    def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage):
         """
         Server responds that a player failed to join the lobby
         """
@@ -99,7 +102,7 @@ class GameBroker(Namespace):
         )
 
     @expect(GameUpdateMessage)
-    def on_gameupdate(self, sid: str, msg: GameUpdateMessage):
+    def on_gameupdate(self, sid: GameServerSID, msg: GameUpdateMessage):
         """
         Server notifies of a game state change
         """
@@ -121,7 +124,10 @@ class GameBroker(Namespace):
                     roomid=msg.roomid,
                     playerid=msg.playerid,
                 )
-                r.send(sio=self, to=f"room-{room.id}")
+                logger.info(
+                    f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
+                )
+                r.send(sio=self, to=room.broadcast_sid)
             state = GameState.get(id=msg.stateid, room_id=msg.roomid, relax=True)
             if state is None:
                 GameState.create(
@@ -132,7 +138,7 @@ class GameBroker(Namespace):
             room.update(status="playing", board=msg.board, turn=msg.turn)
 
     @expect(MoveMessage)
-    def on_move(self, sid: str, msg: MoveMessage):
+    def on_move(self, sid: PlayerSID, msg: MoveMessage):
         """
         Player sends a move request
         """
@@ -155,7 +161,7 @@ class GameBroker(Namespace):
             ).send(self, to=room.server_sid)
 
     @expect(FinishMessage)
-    def on_finish(self, sid: str, msg: FinishMessage):
+    def on_finish(self, sid: GameServerSID, msg: FinishMessage):
         """
         Server notifies that the game has finished
         """
@@ -166,10 +172,10 @@ class GameBroker(Namespace):
             raise GameNotRunning
         else:
             room.update(status="finished")
-            msg.send(self, to=f"room-{room.id}")
+            msg.send(self, to=room.broadcast_sid)
 
     @expect(ListMessage)
-    def on_list(self, sid: str, msg: ListMessage):
+    def on_list(self, sid: PlayerSID, msg: ListMessage):
         RoomsMessage(
             rooms={
                 room.id: {

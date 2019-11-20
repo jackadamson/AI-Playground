@@ -1,8 +1,8 @@
 class AsimovExceptionBase(Exception):
     details = "Base exception inherited by all other Asimov API exceptions"
 
-    def __init__(self, details=None, *args, **kwargs):
-        super(Exception).__init__(*args, **kwargs)
+    def __init__(self, details=None, *args):
+        super(Exception).__init__(*args)
         if details is not None:
             self.details = details
 

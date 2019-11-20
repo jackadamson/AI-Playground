@@ -13,6 +13,7 @@ from aiplayground.types import (
     PlayerName,
     RoomName,
     GameName,
+    SioSID,
 )
 
 
@@ -21,7 +22,9 @@ class MessageBase:
     schema = dict()
     _callback = None
 
-    def send(self, sio, to: Optional[str] = None, callback: Optional[callable] = None):
+    def send(
+        self, sio, to: Optional[SioSID] = None, callback: Optional[callable] = None
+    ):
         message_name = self.__class__.__name__[:-7].lower()
         self._callback = callback
         if to is None:

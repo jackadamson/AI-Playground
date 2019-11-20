@@ -3,6 +3,10 @@ import random
 from flaskplusplus.logging import logger
 from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted, IllegalMove
+from aiplayground.types import GameRole, PlayerId, Move
+
+player_x = GameRole("x")
+player_o = GameRole("o")
 
 
 class TicTacToeServer(BaseGameServer):
@@ -23,11 +27,11 @@ class TicTacToeServer(BaseGameServer):
 
     def init_game(self):
         self.board = {"grid": [[None for _i in range(3)] for _j in range(3)]}
-        self.turn = self.roles["x"]
+        self.turn = self.roles[player_x]
 
-    def asign_role(self, player_id: str) -> Optional[str]:
+    def asign_role(self, player_id: PlayerId) -> Optional[GameRole]:
         logger.debug(f"Currently assigned roles: {self.roles}")
-        available = list({"o", "x"} - set(self.roles))
+        available = list({player_o, player_x} - set(self.roles))
         logger.debug(f"Available roles: {available}")
         role = random.choice(available)
         logger.debug(f"Assigning role {player_id} -> {role}")
@@ -35,11 +39,13 @@ class TicTacToeServer(BaseGameServer):
         self.roles[role] = player_id
         return role
 
-    def make_move(self, player_id: str, player_role: Optional[str], move: dict):
+    def make_move(
+        self, player_id: PlayerId, player_role: Optional[GameRole], move: Move
+    ):
         logger.debug(f"Making move for role: {player_role}")
         col: int = move["col"]
         row: int = move["row"]
-        grid: List[List[Optional[str]]] = self.board["grid"]
+        grid: List[List[Optional[GameRole]]] = self.board["grid"]
         if grid[row][col] is not None:
             raise IllegalMove(
                 details="Attempted to play in square that is already occupied"
@@ -60,7 +66,7 @@ class TicTacToeServer(BaseGameServer):
             self.winner = None
             raise GameCompleted
         else:
-            next_role = "o" if player_role == "x" else "x"
+            next_role = player_o if player_role == player_x else player_x
             self.turn = self.roles[next_role]
 
     def score(self) -> Dict[str, int]:
