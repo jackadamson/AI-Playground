@@ -26,7 +26,7 @@ from aiplayground.messages import (
     RegisterMessage,
     RoomCreatedMessage,
 )
-from aiplayground.api.rooms import Room, GameState
+from aiplayground.api.rooms import Room, GameState, BoardState
 from aiplayground.api.players import Player
 
 
@@ -79,11 +79,11 @@ class GameRoom(Namespace):
         Server confirmed a player joining the lobby
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
-        player.update(joined=True)
+        player.update(joined=True, game_role=msg.gamerole)
         self.enter_room(player.sid, room.id)
-        JoinedMessage(roomid=msg.roomid, playerid=msg.playerid).send(
-            self, to=player.sid
-        )
+        JoinedMessage(
+            roomid=msg.roomid, playerid=msg.playerid, gamerole=msg.gamerole
+        ).send(self, to=player.sid)
 
     @expect(JoinFailMessage)
     def on_joinfail(self, sid, msg: JoinFailMessage):

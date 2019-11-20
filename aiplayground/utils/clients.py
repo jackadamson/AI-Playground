@@ -18,7 +18,7 @@ def expect(message_type: Type[MessageBase]):
             try:
                 validate(data, message_type.schema)
             except ValidationError as e:
-                logger.warning(f"Validation encountered for {f.__name__}: {e.message}")
+                logger.error(f"Validation encountered for {f.__name__}: {e.message}")
                 self.emit(
                     "fail",
                     {
@@ -30,7 +30,7 @@ def expect(message_type: Type[MessageBase]):
                 return
             try:
                 msg = message_type(**data)
-                logger.warning(f"Receieved message:\n{msg!r}")
+                logger.debug(f"Receieved message:\n{msg!r}")
                 return f(self, msg=msg)
             except AsimovErrorBase as e:
                 logger.exception(e)

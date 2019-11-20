@@ -12,7 +12,7 @@ from aiplayground.settings import (
     RUN_ONCE,
     CONNECTION_RETRIES,
 )
-from aiplayground.gameservers import all_games, BaseGame
+from aiplayground.gameservers import all_games, BaseGameServer
 from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,
@@ -42,7 +42,7 @@ class GameServerState(Enum):
 
 
 class GameServer(socketio.ClientNamespace):
-    game: BaseGame
+    game: BaseGameServer
     game_name: str
     name: str
     room_id: Optional[str]
@@ -56,6 +56,7 @@ class GameServer(socketio.ClientNamespace):
         self.player_counter = AtomicCounter()
 
     def on_connect(self):
+        # TODO: Handle reconnection
         logger.info("Connected")
         self.player_counter.set(0)
         CreateRoomMessage(

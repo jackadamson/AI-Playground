@@ -1,4 +1,4 @@
-from aiplayground.gameservers.base import BaseGame
-from aiplayground.gameservers.spr import ScissorsPaperRock
+from aiplayground.gameservers.base import BaseGameServer
+from aiplayground.gameservers.spr import ScissorsPaperRockServer
 
-all_games = {"ScissorsPaperRock": ScissorsPaperRock}
+all_games = {ScissorsPaperRockServer.gamename: ScissorsPaperRockServer}

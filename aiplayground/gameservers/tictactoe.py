@@ -3,10 +3,9 @@ from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted
 
 
-class ScissorsPaperRockServer(BaseGameServer):
+class TicTacToe(BaseGameServer):
     max_players = 2
-    gamename = "ScissorsPaperRock"
-    description = "Scissors beats Paper, Paper beats Rock, Rock beats Scissors."
+    description = "Naughts and crosses"
     move_map = {"scissors": 0, "paper": 1, "rock": 2}
 
     def init_game(self):
@@ -14,7 +13,12 @@ class ScissorsPaperRockServer(BaseGameServer):
 
     def show_board(self):
         return (
-            {"choices": [None if self.playing else v for v in self.board["choices"]]}
+            {
+                "choices": {
+                    self.players[i]: None if self.playing else v
+                    for i, v in enumerate(self.board["choices"])
+                }
+            }
             if self.board is not None
             else None
         )

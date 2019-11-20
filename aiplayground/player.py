@@ -14,6 +14,7 @@ from aiplayground.settings import (
     RUN_ONCE,
     CONNECTION_RETRIES,
 )
+from aiplayground.players import all_players, BasePlayer
 from aiplayground.utils.clients import expect
 from aiplayground.messages import (
     GamestateMessage,
@@ -31,6 +32,7 @@ class PlayerClient(socketio.ClientNamespace):
     room_id: Optional[str] = None
     game_name: Optional[str] = None
     lobby_name: Optional[str] = None
+    player: Optional[BasePlayer] = None
 
     def __init__(self, namespace=None):
         super().__init__(namespace=namespace)
@@ -38,11 +40,11 @@ class PlayerClient(socketio.ClientNamespace):
     def on_connect(self):
         # TODO: Handle reconnection properly
         logger.info("I'm connected!")
-        logger.info("In debug!")
         self.room_id = None
         self.player_id = None
         self.game_name = None
         self.lobby_name = None
+        self.player = None
         self.emit("list")
 
     @expect(RoomsMessage)
@@ -66,11 +68,12 @@ class PlayerClient(socketio.ClientNamespace):
     def on_joined(self, msg: JoinedMessage):
         self.player_id = msg.playerid
         self.room_id = msg.roomid
+        self.player = all_players[self.game_name](gamerole=msg.gamerole)
 
     @expect(GamestateMessage)
     def on_gamestate(self, msg: GamestateMessage):
         if msg.turn == self.player_id and msg.turn is not None:
-            logger.info("It's my move!")
+            logger.debug("Our move to play")
             move = random.choice(["scissors", "paper", "rock"])
             MoveMessage(
                 roomid=self.room_id, playerid=self.player_id, move={"move": move}
@@ -93,13 +96,13 @@ class PlayerClient(socketio.ClientNamespace):
             else:
                 self.on_connect()
         else:
-            logger.info(f"Game finished with error: {msg.reason}")
+            logger.error(f"Game finished with error: {msg.reason}")
 
     def on_fail(self, data):
-        logger.info(f"Received fail:\n{json.dumps(data, indent=2)}")
+        logger.error(f"Received fail:\n{json.dumps(data, indent=2)}")
 
     def on_disconnect(self):
-        logger.info("Disconnected!")
+        logger.error("Disconnected!")
 
 
 def main():
@@ -118,7 +121,7 @@ def main():
             sio.wait()
             break
         except ConnectionError:
-            print(
+            logger.warning(
                 f"Connection failed (attempt {i + 1} of {CONNECTION_RETRIES}), waiting 5 secs..."
             )
             sleep(5)

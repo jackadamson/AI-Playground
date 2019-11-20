@@ -44,6 +44,10 @@ joinsuccess_schema = {
             "pattern": "^([a-z0-9-]*)$",
         },
         "roomid": {"type": "string", "title": "Room ID", "pattern": "^([a-z0-9-]*)$"},
+        "gamerole": {
+            "type": "string",
+            "description": "What player in game they are, eg. in Tic Tac Toe, are they O or X",
+        },
     },
     "additionalProperties": False,
 }

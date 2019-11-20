@@ -28,7 +28,11 @@ game_state_schema = Model(
         "move": fields.Raw(
             required=False, description="The actual move which lead to the state"
         ),
-        "board": fields.Raw(required=False, description="Current game state"),
+        "board": fields.Raw(
+            required=False,
+            description="Current game state",
+            attribute=lambda x: x.board.state,
+        ),
         "turn": fields.String(
             required=True,
             description="UUIDv4 of the player who should play next",

@@ -11,6 +11,7 @@ class Player(Base):
     sid = Column(String, nullable=False)
     joined_at = Column(DateTime, default=datetime.now)
     # updated_at = Column(DateTime, onupdate=datetime.now)
+    game_role = Column(String, nullable=True)
     joined = Column(Boolean, default=False, nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=True)
     user = relationship("User", backref="players")

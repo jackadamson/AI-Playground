@@ -8,7 +8,7 @@ from aiplayground.exceptions import (
 )
 
 
-class BaseGame(ABC):
+class BaseGameServer(ABC):
     board: Optional[dict] = None
     playing: bool = False
     winner: Optional[int] = None
@@ -16,6 +16,7 @@ class BaseGame(ABC):
     max_players: int = 2
     players: list
     turn: Optional[int] = None
+    gamename: str = "BaseGame"
     description: str = "A base game"
 
     def __init__(self, *args, **kwargs):

@@ -57,6 +57,7 @@ class JoinedMessage(MessageBase):
     # TODO: Add schema
     playerid: str
     roomid: str
+    gamerole: Optional[str] = None
 
 
 @dataclass
@@ -131,6 +132,7 @@ class JoinSuccessMessage(MessageBase):
     schema = schemas.joinsuccess_schema
     playerid: str
     roomid: str
+    gamerole: Optional[str] = None
 
 
 @dataclass
