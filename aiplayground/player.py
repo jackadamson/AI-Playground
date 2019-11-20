@@ -1,11 +1,19 @@
 from typing import Optional
+from time import sleep
 import socketio
+from socketio.exceptions import ConnectionError
 import random
 import json
 import time
 import requests
 from flaskplusplus.logging import logger
-from aiplayground.settings import ASIMOV_URL, EMAIL, PASSWORD, RUN_ONCE
+from aiplayground.settings import (
+    ASIMOV_URL,
+    EMAIL,
+    PASSWORD,
+    RUN_ONCE,
+    CONNECTION_RETRIES,
+)
 from aiplayground.utils.clients import expect
 from aiplayground.messages import (
     GamestateMessage,
@@ -94,16 +102,25 @@ class PlayerClient(socketio.ClientNamespace):
 
 
 def main():
-    if EMAIL and PASSWORD:
-        r = requests.post(ASIMOV_URL + "/auth/login", auth=(EMAIL, PASSWORD))
-        token = r.json()["payload"]
-        headers = {"Authorization": f"Bearer {token}"}
-    else:
-        headers = {}
-    sio = socketio.Client()
-    player_client = PlayerClient()
-    sio.register_namespace(player_client)
-    sio.connect(ASIMOV_URL, headers=headers)
+    for i in range(CONNECTION_RETRIES):
+        try:
+            if EMAIL and PASSWORD:
+                r = requests.post(ASIMOV_URL + "/auth/login", auth=(EMAIL, PASSWORD))
+                token = r.json()["payload"]
+                headers = {"Authorization": f"Bearer {token}"}
+            else:
+                headers = {}
+            sio = socketio.Client()
+            player_client = PlayerClient()
+            sio.register_namespace(player_client)
+            sio.connect(ASIMOV_URL, headers=headers)
+            sio.wait()
+            break
+        except ConnectionError:
+            print(
+                f"Connection failed (attempt {i + 1} of {CONNECTION_RETRIES}), waiting 5 secs..."
+            )
+            sleep(5)
 
 
 if __name__ == "__main__":
