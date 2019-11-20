@@ -1,5 +1,5 @@
 import json
-from fastjsonschema import JsonSchemaException
+from dataclasses_jsonschema import JsonSchemaValidationError
 from functools import wraps
 from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional
 from flask import request, has_request_context
@@ -25,8 +25,8 @@ def expect(
                 data = dict()
             m = {k: v for k, v in data.items() if v is not None}
             try:
-                message_type.schema(m)
-            except JsonSchemaException as e:
+                msg = message_type.from_dict(m)
+            except JsonSchemaValidationError as e:
                 logger.debug(f"Receieved invalid data:\n{json.dumps(data, indent=2)}")
                 logger.warning(f"Validation encountered for {f.__name__}: {e.message}")
                 return (
@@ -39,7 +39,6 @@ def expect(
                 )
 
             try:
-                msg = message_type(**data)
                 logger.debug(f"Receieved message:\n{msg!r}")
                 if has_request_context():
                     return f(self, sid=request.sid, msg=msg)

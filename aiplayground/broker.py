@@ -9,6 +9,7 @@ from aiplayground.exceptions import (
     GameAlreadyStarted,
     NotPlayersTurn,
     NoSuchRoom,
+    InputValidationError,
 )
 from aiplayground.messages import (
     CreateRoomMessage,
@@ -38,14 +39,14 @@ from aiplayground.types import (
 
 
 class GameBroker(Namespace):
-    def acknowledge_join(self, room_id: RoomId, player_id: PlayerId):
+    def acknowledge_join(self, room_id: RoomId, player_id: PlayerId) -> None:
         room = Room.get(room_id)
         JoinAcknowledgement(roomid=room_id, playerid=player_id).send(
             sio=self, to=room.server_sid
         )
 
     @expect(CreateRoomMessage)
-    def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage):
+    def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage) -> None:
         """
         Server requests to create a game room
         """
@@ -56,7 +57,7 @@ class GameBroker(Namespace):
         RoomCreatedMessage(roomid=room.id).send(self, to=sid)
 
     @expect(JoinMessage)
-    def on_join(self, sid: PlayerSID, msg: JoinMessage):
+    def on_join(self, sid: PlayerSID, msg: JoinMessage) -> None:
         """
         Player requests to join a game room
         """
@@ -81,7 +82,7 @@ class GameBroker(Namespace):
             )
 
     @expect(JoinSuccessMessage)
-    def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage):
+    def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage) -> None:
         """
         Server confirmed a player joining the lobby
         """
@@ -100,7 +101,7 @@ class GameBroker(Namespace):
         )
 
     @expect(JoinFailMessage)
-    def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage):
+    def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage) -> None:
         """
         Server responds that a player failed to join the lobby
         """
@@ -113,10 +114,24 @@ class GameBroker(Namespace):
         )
 
     @expect(GameUpdateMessage)
-    def on_gameupdate(self, sid: GameServerSID, msg: GameUpdateMessage):
+    def on_gameupdate(self, sid: GameServerSID, msg: GameUpdateMessage) -> None:
         """
         Server notifies of a game state change
         """
+        if msg.visibility == "private":
+            if msg.playerid is None:
+                raise InputValidationError(
+                    details="error: 'playerid' must be provided when visibility is private"
+                )
+        else:
+            if msg.playerid is not None:
+                raise InputValidationError(
+                    details="error: 'playerid' cannot be provided unless visibility is private"
+                )
+            if msg.epoch is None:
+                raise InputValidationError(
+                    details="error: 'epoch' is required for non-private messages"
+                )
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         if room.status == "finished":
             room.update(board=msg.board, turn=None)
@@ -150,7 +165,7 @@ class GameBroker(Namespace):
             room.update(status="playing", board=msg.board, turn=msg.turn)
 
     @expect(MoveMessage)
-    def on_move(self, sid: PlayerSID, msg: MoveMessage):
+    def on_move(self, sid: PlayerSID, msg: MoveMessage) -> None:
         """
         Player sends a move request
         """
@@ -173,7 +188,7 @@ class GameBroker(Namespace):
             ).send(self, to=room.server_sid)
 
     @expect(FinishMessage)
-    def on_finish(self, sid: GameServerSID, msg: FinishMessage):
+    def on_finish(self, sid: GameServerSID, msg: FinishMessage) -> None:
         """
         Server notifies that the game has finished
         """
@@ -187,7 +202,7 @@ class GameBroker(Namespace):
             msg.send(self, to=room.broadcast_sid)
 
     @expect(ListMessage)
-    def on_list(self, sid: PlayerSID, msg: ListMessage):
+    def on_list(self, sid: PlayerSID, msg: ListMessage) -> None:
         RoomsMessage(
             rooms={
                 room.id: {

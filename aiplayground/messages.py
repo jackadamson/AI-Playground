@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, Dict, Callable
-import fastjsonschema
-import aiplayground.schemas as schemas
+from typing import Optional, Dict, Callable, TypedDict
+
+# import aiplayground.schemas as schemas
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
 from aiplayground.types import (
@@ -15,13 +15,14 @@ from aiplayground.types import (
     RoomName,
     GameName,
     SioSID,
+    RoomDict,
 )
 from dataclasses_jsonschema import JsonSchemaMixin
 
 
 @dataclass
 class MessageBase(JsonSchemaMixin):
-    schema = fastjsonschema.compile({})
+    # schema = fastjsonschema.compile({})
     _callback = None
 
     def send(
@@ -53,7 +54,7 @@ class GamestateMessage(MessageBase):
     :to player
     """
 
-    schema = schemas.gamestate_schema
+    # schema = schemas.gamestate_schema
     board: Board
     roomid: RoomId
     playerid: Optional[PlayerId]
@@ -67,7 +68,7 @@ class JoinedMessage(MessageBase):
     :to player
     """
 
-    schema = schemas.joined_schema
+    # schema = schemas.joined_schema
     playerid: PlayerId
     roomid: RoomId
     gamerole: Optional[GameRole] = None
@@ -80,7 +81,7 @@ class PlayerMoveMessage(MessageBase):
     :to server
     """
 
-    schema = schemas.player_move_schema
+    # schema = schemas.player_move_schema
     move: Move
     playerid: PlayerId
     roomid: RoomId
@@ -94,7 +95,7 @@ class RegisterMessage(MessageBase):
     :to server
     """
 
-    schema = schemas.register_schema
+    # schema = schemas.register_schema
     playerid: PlayerId
     roomid: RoomId
 
@@ -106,7 +107,7 @@ class RoomCreatedMessage(MessageBase):
     :to server
     """
 
-    schema = schemas.room_created_schema
+    # schema = schemas.room_created_schema
     roomid: RoomId
 
 
@@ -118,7 +119,7 @@ class RoomsMessage(MessageBase):
     """
 
     # TODO: Add schema
-    rooms: dict
+    rooms: Dict[RoomId, RoomDict]
 
 
 @dataclass
@@ -129,7 +130,7 @@ class JoinAcknowledgement(MessageBase):
     :to player
     """
 
-    schema = schemas.register_schema
+    # schema = schemas.register_schema
     roomid: RoomId
     playerid: PlayerId
 
@@ -142,7 +143,7 @@ class CreateRoomMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.createroom_schema
+    # schema = schemas.createroom_schema
     name: RoomName
     game: GameName
     maxplayers: int
@@ -155,7 +156,7 @@ class JoinSuccessMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.joinsuccess_schema
+    # schema = schemas.joinsuccess_schema
     playerid: PlayerId
     roomid: RoomId
     gamerole: Optional[GameRole] = None
@@ -168,7 +169,7 @@ class JoinFailMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.joinfail_schema
+    # schema = schemas.joinfail_schema
     playerid: PlayerId
     roomid: RoomId
     reason: Optional[str] = None
@@ -181,7 +182,7 @@ class GameUpdateMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.gameupdate_schema
+    # schema = schemas.gameupdate_schema
     roomid: RoomId
     visibility: str
     epoch: int
@@ -198,7 +199,7 @@ class FinishMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.finish_schema
+    # schema = schemas.finish_schema
     roomid: RoomId
     normal: bool
     scores: Optional[Dict[PlayerId, int]] = None
@@ -214,7 +215,7 @@ class JoinMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.join_schema
+    # schema = schemas.join_schema
     roomid: RoomId
     name: PlayerName
 
@@ -226,7 +227,7 @@ class MoveMessage(MessageBase):
     :to broker
     """
 
-    schema = schemas.move_schema
+    # schema = schemas.move_schema
     playerid: PlayerId
     roomid: RoomId
     move: Move

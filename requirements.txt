@@ -4,4 +4,6 @@ eventlet
 python-socketio
 requests
 fastjsonschema
+mypy
+dataclasses-jsonschema[fast-validation]
 git+ssh://git@gitlab.mrfluffybunny.com/asimov/flaskplusplus.git

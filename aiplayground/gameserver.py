@@ -68,7 +68,7 @@ class GameServer(socketio.ClientNamespace):
 
     def on_connect(self):
         with self.lock:
-            # TODO: Handle reconnection
+            # TODO: Handle reconnection properly
             logger.info("Connected")
             self.initialize()
 
