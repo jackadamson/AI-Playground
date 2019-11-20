@@ -32,10 +32,7 @@ class BaseGameServer(ABC):
             raise ExistingPlayer
         if len(self.players) >= self.max_players:
             raise GameFull
-        role = self.asign_role(player_id)
-        self.players[player_id] = role
-        self.roles[role] = player_id
-        return role
+        return self.asign_role(player_id)
 
     def asign_role(self, player_id: str) -> Optional[str]:
         return None

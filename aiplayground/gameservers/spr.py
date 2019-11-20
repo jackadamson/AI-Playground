@@ -29,9 +29,12 @@ class ScissorsPaperRockServer(BaseGameServer):
 
     def asign_role(self, player_id: str) -> Optional[str]:
         if "a" in self.roles:
-            return "b"
+            role = "b"
         else:
-            return "a"
+            role = "a"
+        self.players[player_id] = role
+        self.roles[role] = player_id
+        return role
 
     def make_move(self, player_id: str, player_role: Optional[str], move: dict):
         m: str = move["move"]

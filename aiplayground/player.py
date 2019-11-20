@@ -1,8 +1,7 @@
-from typing import Optional
+from typing import Optional, Type
 from time import sleep
 import socketio
 from socketio.exceptions import ConnectionError
-import random
 import json
 import time
 import requests
@@ -40,7 +39,7 @@ class PlayerClient(socketio.ClientNamespace):
 
     def on_connect(self):
         # TODO: Handle reconnection properly
-        logger.info("Connected!")
+        logger.info("Connected to broker")
         self.room_id = None
         self.player_id = None
         self.game_name = None
@@ -69,22 +68,22 @@ class PlayerClient(socketio.ClientNamespace):
     def on_joined(self, msg: JoinedMessage):
         self.player_id = msg.playerid
         self.room_id = msg.roomid
-        self.player = all_players[self.game_name](gamerole=msg.gamerole)
-        logger.info(f"Player: {self.player_id!r}")
+        logger.info(f"Joined Game: {self.lobby_name}({self.game_name})")
+        player: Type[BasePlayer] = all_players[self.game_name]
+        self.player = player(gamerole=msg.gamerole, player_id=msg.playerid)
 
     @expect(GamestateMessage)
     def on_gamestate(self, msg: GamestateMessage):
-        if msg.turn == self.player_id and msg.turn is not None:
-            logger.debug("Our move to play")
-            move = random.choice(["scissors", "paper", "rock"])
-            MoveMessage(
-                roomid=self.room_id, playerid=self.player_id, move={"move": move}
-            ).send(sio=self)
+        move = self.player.update(board=msg.board, turn=msg.turn)
+        if move is not None:
+            MoveMessage(roomid=self.room_id, playerid=self.player_id, move=move).send(
+                sio=self
+            )
 
     @expect(FinishMessage)
     def on_finish(self, msg: FinishMessage):
         if msg.normal:
-            logger.info("Game finished normally")
+            logger.debug("Game finished normally")
             score = msg.scores[self.player_id]
             if score > 0:
                 logger.info("We won :)")
