@@ -15,7 +15,7 @@ from aiplayground.settings import (
     CONNECTION_RETRIES,
 )
 from aiplayground.players import all_players, BasePlayer
-from aiplayground.utils.clients import expect
+from aiplayground.utils.expect import expect
 from aiplayground.messages import (
     GamestateMessage,
     JoinMessage,
@@ -39,13 +39,13 @@ class PlayerClient(socketio.ClientNamespace):
 
     def on_connect(self):
         # TODO: Handle reconnection properly
-        logger.info("I'm connected!")
+        logger.info("Connected!")
         self.room_id = None
         self.player_id = None
         self.game_name = None
         self.lobby_name = None
         self.player = None
-        self.emit("list")
+        ListMessage().send(sio=self)
 
     @expect(RoomsMessage)
     def on_rooms(self, msg: RoomsMessage):
@@ -57,8 +57,8 @@ class PlayerClient(socketio.ClientNamespace):
             if v["status"] == "lobby"
         ]
         if not lobbies:
-            logger.warning("No active lobbies found, sleeping for 10s")
-            time.sleep(10)
+            logger.warning("No active lobbies found, sleeping for 2s")
+            time.sleep(2)
             ListMessage().send(sio=self)
             return
         self.room_id, self.game_name, self.lobby_name = lobbies[0]
@@ -122,9 +122,9 @@ def main():
             break
         except ConnectionError:
             logger.warning(
-                f"Connection failed (attempt {i + 1} of {CONNECTION_RETRIES}), waiting 5 secs..."
+                f"Connection failed (attempt {i + 1} of {CONNECTION_RETRIES}), waiting 2 secs..."
             )
-            sleep(5)
+            sleep(2)
 
 
 if __name__ == "__main__":

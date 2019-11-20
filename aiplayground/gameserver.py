@@ -5,6 +5,7 @@ from time import sleep
 from typing import Optional
 from enum import Enum, auto
 from aiplayground.utils.atomic import AtomicCounter
+from aiplayground.utils.expect import expect
 from aiplayground.settings import (
     GAME,
     LOBBY_NAME,
@@ -19,7 +20,6 @@ from aiplayground.exceptions import (
     GameCompleted,
     AsimovServerError,
 )
-from aiplayground.utils.clients import expect
 from aiplayground.messages import (
     CreateRoomMessage,
     RoomCreatedMessage,
@@ -66,11 +66,12 @@ class GameServer(socketio.ClientNamespace):
     def player_added(self):
         count = self.player_counter.increment_then_get()
         if count == self.game.max_players:
+            self.game.start()
             GameUpdateMessage(
                 visibility="broadcast",
                 roomid=self.room_id,
                 board=self.game.show_board(),
-                turn=self.game.players[self.game.turn],
+                turn=self.game.turn,
                 epoch=self.game.movenumber,
             ).send(sio=self)
 
@@ -112,7 +113,7 @@ class GameServer(socketio.ClientNamespace):
                 visibility="broadcast",
                 roomid=msg.roomid,
                 board=self.game.show_board(),
-                turn=self.game.players[self.game.turn],
+                turn=self.game.turn,
                 epoch=self.game.movenumber,
                 stateid=msg.stateid,
             ).send(sio=self)
@@ -130,7 +131,7 @@ class GameServer(socketio.ClientNamespace):
                 normal=True, scores=self.game.score(), roomid=self.room_id
             ).send(sio=self)
             if RUN_ONCE:
-                sio.disconnect()
+                self.disconnect()
             else:
                 self.game = all_games[self.game_name]()
                 self.on_connect()
@@ -153,9 +154,9 @@ def main():
             break
         except ConnectionError:
             print(
-                f"Connection failed (attempt {i+1} of {CONNECTION_RETRIES}), waiting 5 secs..."
+                f"Connection failed (attempt {i+1} of {CONNECTION_RETRIES}), waiting 2 secs..."
             )
-            sleep(5)
+            sleep(2)
 
 
 if __name__ == "__main__":

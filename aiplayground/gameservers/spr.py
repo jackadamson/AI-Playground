@@ -1,4 +1,5 @@
-from typing import Dict
+from typing import Dict, Optional
+from flaskplusplus.logging import logger
 from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted
 
@@ -8,37 +9,50 @@ class ScissorsPaperRockServer(BaseGameServer):
     gamename = "ScissorsPaperRock"
     description = "Scissors beats Paper, Paper beats Rock, Rock beats Scissors."
     move_map = {"scissors": 0, "paper": 1, "rock": 2}
+    winner: Optional[str] = None
 
     def init_game(self):
-        self.board = {"choices": [None, None]}
+        self.board = {"choices": {"a": None, "b": None}}
+        self.turn = self.roles["a"]
 
     def show_board(self):
         return (
-            {"choices": [None if self.playing else v for v in self.board["choices"]]}
+            {
+                "choices": {
+                    k: None if self.playing else v
+                    for k, v in self.board["choices"].items()
+                }
+            }
             if self.board is not None
             else None
         )
 
-    def make_move(self, move):
+    def asign_role(self, player_id: str) -> Optional[str]:
+        if "a" in self.roles:
+            return "b"
+        else:
+            return "a"
+
+    def make_move(self, player_id: str, player_role: Optional[str], move: dict):
         m: str = move["move"]
         if m not in ["scissors", "paper", "rock"]:
             raise ValueError
-        if self.turn == 0:
-            self.board["choices"][0] = m
-            self.turn = True
+        logger.debug(f"Player Role: {player_role}")
+        if player_role == "a":
+            self.board["choices"]["a"] = m
+            self.turn = self.roles["b"]
+        elif m == self.board["choices"]["b"]:
+            self.board["choices"] = {"a": None, "b": None}
+            self.turn = self.roles["a"]
         else:
-            if m == self.board["choices"][0]:
-                self.board["choices"] = [None, None]
-                self.turn = 0
-            else:
-                self.board["choices"][1] = m
-                raise GameCompleted
+            self.board["choices"]["b"] = m
+            raise GameCompleted
 
     def score(self) -> Dict[str, int]:
-        first_move = self.move_map[self.board["choices"][0]]
-        second_move = self.move_map[self.board["choices"][1]]
+        first_move = self.move_map[self.board["choices"]["a"]]
+        second_move = self.move_map[self.board["choices"]["b"]]
         if second_move == (first_move + 1) % 3:
-            self.winner = 0
+            self.winner = self.roles["a"]
         else:
-            self.winner = 1
-        return {p: 1 if i == self.winner else -1 for i, p in enumerate(self.players)}
+            self.winner = self.roles["b"]
+        return {k: 1 if k == self.winner else -1 for k in self.players}

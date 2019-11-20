@@ -2,7 +2,8 @@ from flask import request
 from flask_socketio import Namespace
 from flaskplusplus import logger
 from flaskplusplus.utils import optional_jwt_in_request
-from aiplayground.utils.broker import expect, get_room_player
+from aiplayground.utils.broker import get_room_player
+from aiplayground.utils.expect import expect
 from aiplayground.exceptions import (
     GameNotRunning,
     GameAlreadyStarted,
@@ -30,7 +31,7 @@ from aiplayground.api.rooms import Room, GameState, BoardState
 from aiplayground.api.players import Player
 
 
-class GameRoom(Namespace):
+class GameBroker(Namespace):
     def on_connect(self):
         logger.debug(f"Connection: sid={request.sid!r}")
 

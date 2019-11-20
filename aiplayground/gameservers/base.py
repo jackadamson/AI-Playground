@@ -11,46 +11,63 @@ from aiplayground.exceptions import (
 class BaseGameServer(ABC):
     board: Optional[dict] = None
     playing: bool = False
-    winner: Optional[int] = None
     movenumber: int = 0
     max_players: int = 2
-    players: list
-    turn: Optional[int] = None
+    players: Dict[str, Optional[str]]
+    roles: Dict[str, str]
+    turn: Optional[str] = None
     gamename: str = "BaseGame"
     description: str = "A base game"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.players = list()
+        self.players = dict()
+        self.roles = dict()
 
-    def add_player(self, player_id: str) -> None:
+    def add_player(self, player_id: str) -> Optional[str]:
         if player_id in self.players:
             raise ExistingPlayer
         if len(self.players) >= self.max_players:
             raise GameFull
-        self.players.append(player_id)
-        if len(self.players) == self.max_players:
-            self.playing = True
-            self.init_game()
-            self.turn = 0
+        role = self.asign_role(player_id)
+        self.players[player_id] = role
+        self.roles[role] = player_id
+        return role
+
+    def asign_role(self, player_id: str) -> Optional[str]:
+        return None
 
     def move(self, player_id: str, move: dict) -> dict:
         if not self.playing:
             raise GameNotRunning
 
-        current_id = self.players[self.turn]
-        if player_id != current_id:
+        if player_id != self.turn:
             raise NotPlayersTurn
         self.movenumber += 1
-        self.make_move(move)
+        self.make_move(
+            player_id=player_id, player_role=self.players.get(player_id), move=move
+        )
         return self.show_board()
+
+    def start(self):
+        self.playing = True
+        self.init_game()
 
     @abstractmethod
     def init_game(self):
+        """
+        Sets the board as needed and sets who's turn it is
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def make_move(self, move: dict):
+    def make_move(self, player_id: str, player_role: Optional[str], move: dict):
+        """
+        :param player_id: ID of the player moving
+        :param player_role: Game assigned role for player
+        :param move: Move for player to make
+        :raises IllegalMove: If player attempts an illegal move
+        """
         raise NotImplementedError
 
     @abstractmethod

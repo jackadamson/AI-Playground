@@ -7,14 +7,14 @@ from aiplayground.exceptions import AsimovErrorBase
 from aiplayground.messages import MessageBase
 
 if TYPE_CHECKING:
-    from aiplayground.broker import GameRoom
+    from aiplayground.broker import GameBroker
 
 
 # Useful for gameservers and players
 def expect(message_type: Type[MessageBase]):
     def decorator(f: Callable[..., None]):
         @wraps(f)
-        def wrapper(self: "GameRoom", data: dict):
+        def wrapper(self: "GameBroker", data: dict):
             try:
                 validate(data, message_type.schema)
             except ValidationError as e:

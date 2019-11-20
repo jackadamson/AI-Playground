@@ -1,8 +1,8 @@
-class AssimovExceptionBase(Exception):
+class AsimovExceptionBase(Exception):
     details = "Base exception inherited by all other Asimov API exceptions"
 
 
-class AsimovErrorBase(AssimovExceptionBase):
+class AsimovErrorBase(AsimovExceptionBase):
     details = "Base error inherited by all other Asimov API errors"
 
 
@@ -86,7 +86,7 @@ class ExistingPlayer(AsimovServerError):
     details = "Player tried to join game they are already in"
 
 
-class GameCompleted(AssimovExceptionBase):
+class GameCompleted(AsimovExceptionBase):
     """
     Not propogated
     """
@@ -100,3 +100,5 @@ class IllegalMove(AsimovServerError):
     """
 
     details = "Player attempted a move that is not a legal move"
+
+all_exceptions = {"IllegalMove": IllegalMove}
