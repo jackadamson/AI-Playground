@@ -6,40 +6,53 @@ from datetime import datetime
 from flaskplusplus import Base
 from flaskplusplus.database import JSONColumn
 import json
+from aiplayground.types import (
+    PlayerId,
+    RoomId,
+    StateId,
+    RoomName,
+    GameName,
+    Board,
+    Move,
+)
+from aiplayground.api.players import Player
 
 
 class Room(Base):
     __tablename__ = "rooms"
-    name = Column(String, nullable=False)
-    game = Column(String, nullable=False)
+    id: RoomId
+    name: RoomName = Column(String, nullable=False)
+    game: GameName = Column(String, nullable=False)
     maxplayers = Column(Integer, nullable=False)
-    sid = Column(String, nullable=False)
+    server_sid = Column(String, nullable=False)
     status = Column(String, default="lobby")
-    board = Column(JSONColumn, default={})
-    turn = Column(Integer, nullable=True)
+    board: Board = Column(JSONColumn, default={})
+    turn = Column(String, ForeignKey("players.id"), nullable=True)
     normal_finish = Column(Boolean, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
-    players = relationship("Player")
+    players = relationship("Player", foreign_keys=[Player.room_id])
     # updated_at = Column(DateTime, onupdate=datetime.now)
 
 
 class GameState(Base):
     __tablename__ = "gamestates"
+    id: StateId
     timestamp = Column(DateTime, default=datetime.now)
-    player_id = Column(String, ForeignKey("players.id"), nullable=True)
-    player = relationship("Player", backref="moves")
+    player_id: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
+    player = relationship("Player", backref="moves", foreign_keys=[player_id])
 
-    room_id = Column(String, ForeignKey("rooms.id"), nullable=False)
+    room_id: RoomId = Column(String, ForeignKey("rooms.id"), nullable=False)
     room = relationship("Room", backref="states")
 
     epoch = Column(Integer)
-    move = Column(JSONColumn, nullable=True)
+    move: Move = Column(JSONColumn, nullable=True)
     boardstate_id = Column(String, ForeignKey("boardstates.id"), nullable=True)
     board = relationship("BoardState", lazy="joined")
-    turn = Column(Integer, nullable=True)
+    turn: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
 
     def __init__(self, board=None, **kwargs):
         boardstate_id = BoardState.id_from_state(board)
+        # noinspection PyArgumentList
         Base.__init__(self, boardstate_id=boardstate_id, **kwargs)
 
     def update(self: "GameState", board=None, **kwargs):
@@ -52,7 +65,7 @@ class GameState(Base):
 
 class BoardState(Base):
     __tablename__ = "boardstates"
-    state = Column(JSONColumn, nullable=False, unique=True, index=True)
+    state: Board = Column(JSONColumn, nullable=False, unique=True, index=True)
 
     @classmethod
     def id_from_state(cls, state: Optional[dict]) -> Optional[str]:

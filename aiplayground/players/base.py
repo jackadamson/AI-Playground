@@ -1,19 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from flaskplusplus.logging import logger
+from aiplayground.types import Move, PlayerId, GameName, Board, GameRole
 
 
 class BasePlayer(ABC):
-    gamename: str
-    gamerole: Optional[str]
-    player_id: str
-    board: Optional[dict] = None
+    gamename: GameName
+    gamerole: Optional[GameRole]
+    player_id: PlayerId
+    board: Optional[Board] = None
 
-    def __init__(self, player_id: str, gamerole: Optional[str] = None):
+    def __init__(self, player_id: PlayerId, gamerole: Optional[GameRole] = None):
         self.gamerole = gamerole
         self.player_id = player_id
 
-    def update(self, board: dict, turn: Optional[str] = None) -> Optional[dict]:
+    def update(self, board: Board, turn: Optional[PlayerId] = None) -> Optional[Move]:
         """
         Can be overridden to do processing even when not the player's turn
         Also can be overridden if players want to keep track of previous states
@@ -28,5 +29,5 @@ class BasePlayer(ABC):
             return None
 
     @abstractmethod
-    def get_move(self) -> dict:
+    def get_move(self) -> Move:
         pass

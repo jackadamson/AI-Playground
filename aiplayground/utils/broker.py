@@ -26,7 +26,7 @@ def get_room_player(
     room = Room.get(roomid)
     if room is None:
         raise NoSuchRoom
-    if check_server and sid != room.sid:
+    if check_server and sid != room.server_sid:
         raise UnauthorizedGameServer
     if playerid is None:
         return room, None

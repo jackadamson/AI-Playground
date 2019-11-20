@@ -13,6 +13,7 @@ from aiplayground.settings import (
     RUN_ONCE,
     CONNECTION_RETRIES,
     LEEROY_JENKINS,
+    PLAYER_NAME,
 )
 from aiplayground.players import all_players, BasePlayer
 from aiplayground.utils.expect import expect
@@ -25,17 +26,20 @@ from aiplayground.messages import (
     RoomsMessage,
     MoveMessage,
 )
+from aiplayground.types import PlayerId, RoomId, RoomName, GameName, PlayerName
 
 
 class PlayerClient(socketio.ClientNamespace):
-    player_id: Optional[str] = None
-    room_id: Optional[str] = None
-    game_name: Optional[str] = None
-    lobby_name: Optional[str] = None
+    player_id: Optional[PlayerId] = None
+    room_id: Optional[RoomId] = None
+    game_name: Optional[GameName] = None
+    room_name: Optional[RoomName] = None
     player: Optional[BasePlayer] = None
+    player_name: PlayerName
 
-    def __init__(self, namespace=None):
-        super().__init__(namespace=namespace)
+    def __init__(self, player_name: PlayerName = PLAYER_NAME):
+        super().__init__()
+        self.player_name = player_name
 
     def on_connect(self):
         # TODO: Handle reconnection properly
@@ -43,7 +47,7 @@ class PlayerClient(socketio.ClientNamespace):
         self.room_id = None
         self.player_id = None
         self.game_name = None
-        self.lobby_name = None
+        self.room_name = None
         self.player = None
         ListMessage().send(sio=self)
 
@@ -61,14 +65,14 @@ class PlayerClient(socketio.ClientNamespace):
             time.sleep(2)
             ListMessage().send(sio=self)
             return
-        self.room_id, self.game_name, self.lobby_name = lobbies[0]
-        JoinMessage(roomid=self.room_id, name="Some Player").send(sio=self)
+        self.room_id, self.game_name, self.room_name = lobbies[0]
+        JoinMessage(roomid=self.room_id, name=self.player_name).send(sio=self)
 
     @expect(JoinedMessage)
     def on_joined(self, msg: JoinedMessage):
         self.player_id = msg.playerid
         self.room_id = msg.roomid
-        logger.info(f"Joined Game: {self.lobby_name}({self.game_name})")
+        logger.info(f"Joined Game: {self.room_name}({self.game_name})")
         player: Type[BasePlayer] = all_players[self.game_name]
         self.player = player(gamerole=msg.gamerole, player_id=msg.playerid)
 

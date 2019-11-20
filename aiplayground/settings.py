@@ -20,6 +20,8 @@ GAME = env.str("ASIMOV_GAME", default="ScissorsPaperRock")
 LOBBY_NAME = env.str("ASIMOV_LOBBY_NAME", default=f"A {GAME} lobby")
 
 # For a player
+# Name for player
+PLAYER_NAME = env.str("ASIMOV_PLAYER_NAME", default="Some Player")
 # Whether to keep playing new games after losing due to playing an illegal move
 LEEROY_JENKINS = env.bool("LEEROY_JENKINS", default=False)
 

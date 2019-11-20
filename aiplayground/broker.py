@@ -28,6 +28,7 @@ from aiplayground.messages import (
 )
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.api.players import Player
+from aiplayground.types import PlayerId, RoomId, RoomName, GameName, PlayerName
 
 
 class GameBroker(Namespace):
@@ -43,7 +44,7 @@ class GameBroker(Namespace):
         Server requests to create a game room
         """
         room = Room.create(
-            name=msg.name, game=msg.game, maxplayers=msg.maxplayers, sid=sid
+            name=msg.name, game=msg.game, maxplayers=msg.maxplayers, server_sid=sid
         )
         logger.info(f"Registered Gameserver with room: {room.id}")
         RoomCreatedMessage(roomid=room.id).send(self, to=sid)
@@ -70,7 +71,7 @@ class GameBroker(Namespace):
         else:
             logger.info(f"Registering user")
             RegisterMessage(roomid=msg.roomid, playerid=player_id).send(
-                self, to=room.sid
+                self, to=room.server_sid
             )
 
     @expect(JoinSuccessMessage)
@@ -151,7 +152,7 @@ class GameBroker(Namespace):
                 playerid=msg.playerid,
                 move=msg.move,
                 stateid=state.id,
-            ).send(self, to=room.sid)
+            ).send(self, to=room.server_sid)
 
     @expect(FinishMessage)
     def on_finish(self, sid: str, msg: FinishMessage):
