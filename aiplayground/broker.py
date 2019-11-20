@@ -177,7 +177,7 @@ class GameBroker(Namespace):
         """
         Server notifies that the game has finished
         """
-        # TODO: Validation around server sending back acceptable scores
+        # TODO: Add validation around server sending back acceptable scores
         room, _ = get_room_player(sid, msg.roomid, None)
         logger.info("Game finished")
         if room.status == "finished":

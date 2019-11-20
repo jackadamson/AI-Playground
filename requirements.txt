@@ -3,5 +3,5 @@ environs
 eventlet
 python-socketio
 requests
-jsonschema
+fastjsonschema
 git+ssh://git@gitlab.mrfluffybunny.com/asimov/flaskplusplus.git

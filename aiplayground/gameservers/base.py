@@ -1,6 +1,6 @@
 from typing import Optional, Dict
 from abc import ABC, abstractmethod
-from jsonschema import validate, ValidationError
+from fastjsonschema import validate, JsonSchemaException
 from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,
@@ -45,7 +45,7 @@ class BaseGameServer(ABC):
             raise NotPlayersTurn
         try:
             validate(move, self.schema)
-        except ValidationError as e:
+        except JsonSchemaException as e:
             raise IllegalMove(details=e.message) from e
         self.movenumber += 1
         self.make_move(

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, Dict, Callable
+import fastjsonschema
 import aiplayground.schemas as schemas
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
@@ -15,11 +16,12 @@ from aiplayground.types import (
     GameName,
     SioSID,
 )
+from dataclasses_jsonschema import JsonSchemaMixin
 
 
 @dataclass
-class MessageBase:
-    schema = dict()
+class MessageBase(JsonSchemaMixin):
+    schema = fastjsonschema.compile({})
     _callback = None
 
     def send(
@@ -51,7 +53,7 @@ class GamestateMessage(MessageBase):
     :to player
     """
 
-    # TODO: Add schema
+    schema = schemas.gamestate_schema
     board: Board
     roomid: RoomId
     playerid: Optional[PlayerId]
@@ -65,7 +67,7 @@ class JoinedMessage(MessageBase):
     :to player
     """
 
-    # TODO: Add schema
+    schema = schemas.joined_schema
     playerid: PlayerId
     roomid: RoomId
     gamerole: Optional[GameRole] = None
@@ -78,7 +80,7 @@ class PlayerMoveMessage(MessageBase):
     :to server
     """
 
-    # TODO: Add schema
+    schema = schemas.player_move_schema
     move: Move
     playerid: PlayerId
     roomid: RoomId
@@ -92,7 +94,7 @@ class RegisterMessage(MessageBase):
     :to server
     """
 
-    # TODO: Add schema
+    schema = schemas.register_schema
     playerid: PlayerId
     roomid: RoomId
 
@@ -104,7 +106,7 @@ class RoomCreatedMessage(MessageBase):
     :to server
     """
 
-    # TODO: Add schema
+    schema = schemas.room_created_schema
     roomid: RoomId
 
 
@@ -127,6 +129,7 @@ class JoinAcknowledgement(MessageBase):
     :to player
     """
 
+    schema = schemas.register_schema
     roomid: RoomId
     playerid: PlayerId
 
