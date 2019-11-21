@@ -1,0 +1,4 @@
+sphinx-autodoc-typehints
+mypy>=0.740
+sphinx>=2.2.1
+sphinx_rtd_theme>=0.4.3

@@ -47,8 +47,12 @@ class MessageBase(JsonSchemaMixin):
 @dataclass
 class GamestateMessage(MessageBase):
     """
-    :from broker
-    :to player
+    :param dict board: New game board
+    :param str roomid: ID of room that the state change occurred in
+    :param str playerid|None: Intended recipient of the message
+    :param str|None turn: ID of player who's turn it is
+
+    Message from broker to players to indicate a change in game state
     """
 
     board: Board
@@ -60,8 +64,11 @@ class GamestateMessage(MessageBase):
 @dataclass
 class JoinedMessage(MessageBase):
     """
-    :from broker
-    :to player
+    :param str roomid: ID of room that the player joined
+    :param str playerid: Player that joined
+    :param str|None gamerole: Role the player has in the game, eg. 'white' in chess
+
+    Message from broker to players on successfully joining a room
     """
 
     playerid: PlayerId
@@ -72,8 +79,12 @@ class JoinedMessage(MessageBase):
 @dataclass
 class PlayerMoveMessage(MessageBase):
     """
-    :from broker
-    :to server
+    :param dict move: Move the player is making
+    :param str roomid: ID of room that the move is in
+    :param str playerid: Player that is moving
+    :param str stateid: ID of the state used to correlate a move with a resulting state
+
+    Message from broker to game server with a players move
     """
 
     move: Move
@@ -85,8 +96,10 @@ class PlayerMoveMessage(MessageBase):
 @dataclass
 class RegisterMessage(MessageBase):
     """
-    :from broker
-    :to server
+    :param str roomid: ID of room that the player wishes to join
+    :param str playerid: Player that is joining
+
+    Message from broker to game server requesting a player joins the room
     """
 
     playerid: PlayerId
@@ -96,8 +109,9 @@ class RegisterMessage(MessageBase):
 @dataclass
 class RoomCreatedMessage(MessageBase):
     """
-    :from broker
-    :to server
+    :param str roomid: ID of the new game room
+
+    Message from broker to game server acknowledging creation of a game room
     """
 
     roomid: RoomId
@@ -106,20 +120,21 @@ class RoomCreatedMessage(MessageBase):
 @dataclass
 class RoomsMessage(MessageBase):
     """
-    :from broker
-    :to player
+    :param dict rooms: The rooms that are currently in a lobby state
+
+    Message from broker to a potential player listing available rooms
     """
 
-    # TODO: Add schema
     rooms: Dict[RoomId, RoomDict]
 
 
 @dataclass
 class JoinAcknowledgement(MessageBase):
     """
-    Indicates a player has received a Joined event
-    :from broker
-    :to player
+    :param str roomid: ID of room that the player joined
+    :param str playerid: Player that acknowledged joining the room
+
+    Message from broker to game server indicating that a player has acknowledge a JoinSuccess
     """
 
     roomid: RoomId
@@ -130,8 +145,11 @@ class JoinAcknowledgement(MessageBase):
 @dataclass
 class CreateRoomMessage(MessageBase):
     """
-    :from server
-    :to broker
+    :param str name: Name of the lobby to create
+    :param str game: Name of the game that will be played
+    :param int maxplayers: The number of players allowed in the game
+
+    Message from game server to broker requesting creation of a game room
     """
 
     name: RoomName
@@ -142,8 +160,11 @@ class CreateRoomMessage(MessageBase):
 @dataclass
 class JoinSuccessMessage(MessageBase):
     """
-    :from server
-    :to broker
+    :param str playerid: Player that successfully joined
+    :param str roomid: Room that the player joined
+    :param str|None gamerole: Role of the player in the game, eg. 'white' in chess
+
+    Message from game server to broker confirming player joining a room
     """
 
     playerid: PlayerId
@@ -154,8 +175,11 @@ class JoinSuccessMessage(MessageBase):
 @dataclass
 class JoinFailMessage(MessageBase):
     """
-    :from server
-    :to broker
+    :param str playerid: Player that failed to join
+    :param str roomid: Room that the player failed to join
+    :param str|None reason: Reason the player failed to join
+
+    Message from game server to broker reporting a player failed to join a room
     """
 
     playerid: PlayerId
@@ -166,8 +190,15 @@ class JoinFailMessage(MessageBase):
 @dataclass
 class GameUpdateMessage(MessageBase):
     """
-    :from server
-    :to broker
+    :param str roomid: Room that the player failed to join
+    :param str visibility: Visibility of game state update ('public', 'broadcast' or 'private')
+    :param int epoch: The number of state transitions the game has had (turn count)
+    :param dict board: New board state
+    :param str|None stateid: ID of the state used to correlate a move with a resulting state
+    :param str|None playerid: Player to send private update to
+    :param str|None turn: Player who's turn it is
+
+    Message from game server to broker reporting a player failed to join a room
     """
 
     roomid: RoomId
@@ -181,10 +212,7 @@ class GameUpdateMessage(MessageBase):
 
 @dataclass
 class FinishMessage(MessageBase):
-    """
-    :from server or broker
-    :to broker
-    """
+    # TODO: Create docstring
 
     roomid: RoomId
     normal: bool
@@ -196,10 +224,7 @@ class FinishMessage(MessageBase):
 # Sent from player
 @dataclass
 class JoinMessage(MessageBase):
-    """
-    :from player
-    :to broker
-    """
+    # TODO: Create docstring
 
     roomid: RoomId
     name: PlayerName
@@ -207,10 +232,7 @@ class JoinMessage(MessageBase):
 
 @dataclass
 class MoveMessage(MessageBase):
-    """
-    :from player
-    :to broker
-    """
+    # TODO: Create docstring
 
     playerid: PlayerId
     roomid: RoomId
@@ -219,9 +241,6 @@ class MoveMessage(MessageBase):
 
 @dataclass
 class ListMessage(MessageBase):
-    """
-    :from broker
-    :to player
-    """
+    # TODO: Create docstring
 
     pass
