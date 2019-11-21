@@ -198,7 +198,7 @@ class GameUpdateMessage(MessageBase):
     :param str|None playerid: Player to send private update to
     :param str|None turn: Player who's turn it is
 
-    Message from game server to broker reporting a player failed to join a room
+    From gameserver, informing broker that a player failed to join a room
     """
 
     roomid: RoomId
@@ -212,7 +212,15 @@ class GameUpdateMessage(MessageBase):
 
 @dataclass
 class FinishMessage(MessageBase):
-    # TODO: Create docstring
+    """
+    :param str roomid: Room that finished the game
+    :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
+    :param dict|None scores: The scores of the players in the game
+    :param str|None reason: Why the game finished abnormally
+    :param str|None fault: Player tha caused the game to end abnormally
+
+    Message from game server to broker, or broker to player indicating a game finished
+    """
 
     roomid: RoomId
     normal: bool
@@ -224,7 +232,12 @@ class FinishMessage(MessageBase):
 # Sent from player
 @dataclass
 class JoinMessage(MessageBase):
-    # TODO: Create docstring
+    """
+    :param str roomid: Room player is joining
+    :param str name: Chosen name of player joining the game
+
+    Player request to broker requesting joining a room
+    """
 
     roomid: RoomId
     name: PlayerName
@@ -232,7 +245,13 @@ class JoinMessage(MessageBase):
 
 @dataclass
 class MoveMessage(MessageBase):
-    # TODO: Create docstring
+    """
+    :param str playerid: Player making a move
+    :param str roomid: Room player is making a move in
+    :param dict move: Move to make in the game
+
+    Player sending a move to be made in game
+    """
 
     playerid: PlayerId
     roomid: RoomId
@@ -241,6 +260,8 @@ class MoveMessage(MessageBase):
 
 @dataclass
 class ListMessage(MessageBase):
-    # TODO: Create docstring
+    """
+    Player requests list of available rooms
+    """
 
     pass
