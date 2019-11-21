@@ -1,0 +1,2 @@
+git+ssh://git@gitlab.mrfluffybunny.com/asimov/flaskplusplus.git
+-r requirements.txt
