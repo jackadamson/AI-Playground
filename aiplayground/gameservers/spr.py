@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
 from aiplayground.types import GameRole, PlayerId, Board, Move
-from flaskplusplus.logging import logger
+from aiplayground.logging import logger
 from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted
 

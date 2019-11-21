@@ -9,13 +9,7 @@ from threading import Lock
 from aiplayground.types import GameName, RoomName, RoomId
 from aiplayground.utils.atomic import AtomicCounter
 from aiplayground.utils.expect import expect
-from aiplayground.settings import (
-    GAME,
-    LOBBY_NAME,
-    ASIMOV_URL,
-    RUN_ONCE,
-    CONNECTION_RETRIES,
-)
+from aiplayground.settings import Settings
 from aiplayground.gameservers import all_games, BaseGameServer
 from aiplayground.exceptions import (
     GameFull,
@@ -33,7 +27,7 @@ from aiplayground.messages import (
     PlayerMoveMessage,
     FinishMessage,
 )
-from flaskplusplus.logging import logger
+from aiplayground.logging import logger
 
 
 class GameServerState(Enum):
@@ -52,7 +46,7 @@ class GameServer(socketio.ClientNamespace):
     room_id: Optional[RoomId]
     player_counter: AtomicCounter
 
-    def __init__(self, gamename=GAME, name=LOBBY_NAME):
+    def __init__(self, gamename=Settings.GAME, name=Settings.LOBBY_NAME):
         super().__init__()
         self.game = all_games[gamename]()
         self.game_name = gamename
@@ -144,7 +138,7 @@ class GameServer(socketio.ClientNamespace):
                 FinishMessage(
                     normal=True, scores=self.game.score(), roomid=self.room_id
                 ).send(sio=self)
-                if RUN_ONCE:
+                if Settings.RUN_ONCE:
                     self.disconnect()
                 else:
                     self.game = all_games[self.game_name]()
@@ -167,17 +161,17 @@ class GameServer(socketio.ClientNamespace):
 
 
 def main():
-    for i in range(CONNECTION_RETRIES):
+    for i in range(Settings.CONNECTION_RETRIES):
         try:
-            sio = socketio.Client(reconnection_attempts=CONNECTION_RETRIES)
+            sio = socketio.Client(reconnection_attempts=Settings.CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
-            sio.connect(ASIMOV_URL)
+            sio.connect(Settings.ASIMOV_URL)
             sio.wait()
             break
         except ConnectionError:
             print(
-                f"Connection failed (attempt {i+1} of {CONNECTION_RETRIES}), waiting 2 secs..."
+                f"Connection failed (attempt {i+1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
             )
             sleep(2)
 

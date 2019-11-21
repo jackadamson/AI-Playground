@@ -5,16 +5,8 @@ from socketio.exceptions import ConnectionError
 import json
 import time
 import requests
-from flaskplusplus.logging import logger
-from aiplayground.settings import (
-    ASIMOV_URL,
-    EMAIL,
-    PASSWORD,
-    RUN_ONCE,
-    CONNECTION_RETRIES,
-    LEEROY_JENKINS,
-    PLAYER_NAME,
-)
+from aiplayground.logging import logger
+from aiplayground.settings import Settings
 from aiplayground.players import all_players, BasePlayer
 from aiplayground.utils.expect import expect
 from aiplayground.messages import (
@@ -37,7 +29,7 @@ class PlayerClient(socketio.ClientNamespace):
     player: Optional[BasePlayer] = None
     player_name: PlayerName
 
-    def __init__(self, player_name: PlayerName = PLAYER_NAME):
+    def __init__(self, player_name: PlayerName = Settings.PLAYER_NAME):
         super().__init__()
         self.player_name = player_name
 
@@ -108,7 +100,7 @@ class PlayerClient(socketio.ClientNamespace):
             else:
                 logger.info("We lost :(")
 
-            if RUN_ONCE:
+            if Settings.RUN_ONCE:
                 self.disconnect()
             else:
                 self.on_connect()
@@ -116,7 +108,7 @@ class PlayerClient(socketio.ClientNamespace):
             logger.error(f"Game finished with error: {msg.reason}")
             if msg.fault == self.player_id:
                 logger.error("AND IT WAS ALL OUR FAULT D:")
-                if LEEROY_JENKINS:
+                if Settings.LEEROY_JENKINS:
                     logger.error("But YOLO I'll try again")
                     self.on_connect()
                 else:
@@ -130,23 +122,26 @@ class PlayerClient(socketio.ClientNamespace):
 
 
 def main():
-    for i in range(CONNECTION_RETRIES):
+    for i in range(Settings.CONNECTION_RETRIES):
         try:
-            if EMAIL and PASSWORD:
-                r = requests.post(ASIMOV_URL + "/auth/login", auth=(EMAIL, PASSWORD))
+            if Settings.EMAIL and Settings.PASSWORD:
+                r = requests.post(
+                    Settings.ASIMOV_URL + "/auth/login",
+                    auth=(Settings.EMAIL, Settings.PASSWORD),
+                )
                 token = r.json()["payload"]
                 headers = {"Authorization": f"Bearer {token}"}
             else:
                 headers = {}
-            sio = socketio.Client(reconnection_attempts=CONNECTION_RETRIES)
+            sio = socketio.Client(reconnection_attempts=Settings.CONNECTION_RETRIES)
             player_client = PlayerClient()
             sio.register_namespace(player_client)
-            sio.connect(ASIMOV_URL, headers=headers)
+            sio.connect(Settings.ASIMOV_URL, headers=headers)
             sio.wait()
             break
         except ConnectionError:
             logger.warning(
-                f"Connection failed (attempt {i + 1} of {CONNECTION_RETRIES}), waiting 2 secs..."
+                f"Connection failed (attempt {i + 1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
             )
             sleep(2)
 

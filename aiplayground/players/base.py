@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from flaskplusplus.logging import logger
+from aiplayground.logging import logger
 from aiplayground.types import Move, PlayerId, GameName, Board, GameRole
 
 

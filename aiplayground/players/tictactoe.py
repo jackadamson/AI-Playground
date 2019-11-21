@@ -1,5 +1,5 @@
 import random
-from flaskplusplus.logging import logger
+from aiplayground.logging import logger
 from aiplayground.types import GameName, Move
 from aiplayground.players.base import BasePlayer
 
