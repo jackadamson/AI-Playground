@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_restplus import Api
-from flaskplusplus.auth import auth_api, auth_schema
+from flaskplusplus.auth import auth_api, all_schemas as auth_schemas
 from aiplayground.api.rooms import rooms_api, all_schemas as rooms_schemas
 from aiplayground.api.players import players_api, all_schemas as players_schemas
 
@@ -18,7 +18,7 @@ api = Api(
     security=["bearertoken"],
     base_url="/api/v1",
 )
-for schema in [auth_schema] + players_schemas + rooms_schemas:
+for schema in auth_schemas + players_schemas + rooms_schemas:
     api.models[schema.name] = schema
 api.add_namespace(auth_api, "/auth")
 api.add_namespace(rooms_api, "/rooms")

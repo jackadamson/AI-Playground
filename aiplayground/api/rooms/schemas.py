@@ -42,7 +42,7 @@ game_state_schema = Model(
 )
 
 room_schema = Model(
-    "Room",
+    "Room Detailed",
     {
         "id": fields.String(
             required=True,
@@ -74,5 +74,28 @@ room_schema = Model(
         ),
     },
 )
-
-all_schemas = [room_schema, game_state_schema]
+room_schema_brief = Model(
+    "Room",
+    {
+        "id": fields.String(
+            required=True,
+            description="UUIDv4 uniquely identifying the room",
+            example="36cad58c-3421-4cb3-8773-cc8b0f0e808b",
+        ),
+        "name": fields.String(
+            required=True,
+            description="The name of the game room",
+            example="Chess Lobby 1",
+        ),
+        "game": fields.String(
+            required=True, description="Player chosen name", example="tictactoe"
+        ),
+        "status": fields.String(
+            required=True, description="Current game state", example="playing"
+        ),
+        "created_at": fields.DateTime(required=True),
+        "players": fields.List(fields.Nested(player_schema)),
+        "maxplayers": fields.Integer(required=True),
+    },
+)
+all_schemas = [room_schema, room_schema_brief, game_state_schema]
