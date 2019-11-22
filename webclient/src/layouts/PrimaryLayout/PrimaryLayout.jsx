@@ -50,7 +50,7 @@ const AuthLayout = () => {
 
   return (
     <div className={classes.wrapper}>
-      <Sidebar routes={routes} path="/" />
+      <Sidebar routes={routes} />
       <div className={classes.mainPanel}>
         <div className={classes.content}>
           <div className={classes.container}>{switchRoutes}</div>

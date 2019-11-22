@@ -28,6 +28,8 @@ const AuthProvider = ({ children }) => {
           if (resp.data.success) {
             setToken(resp.data.payload);
             setAuthState('authenticated');
+            setUsername('');
+            setEmail('');
           }
         })
         .catch(() => {

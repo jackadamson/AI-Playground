@@ -1,5 +1,7 @@
 import { makeStyles } from '@material-ui/core';
-import { drawerWidth, boxShadow } from '../../assets/styles/commonStyles';
+import {
+  drawerWidth, boxShadow, successColor, hexToRgb, blackColor,
+} from '../../assets/styles/commonStyles';
 
 export default makeStyles((theme) => ({
   background: {
@@ -107,7 +109,6 @@ export default makeStyles((theme) => ({
     },
   },
   logoLink: {
-    textTransform: 'uppercase',
     padding: '5px 0',
     display: 'block',
     fontSize: '18px',
@@ -127,5 +128,27 @@ export default makeStyles((theme) => ({
     width: '260px',
     zIndex: '4',
     overflowScrolling: 'touch',
+  },
+  green: {
+    backgroundColor: successColor[0],
+    boxShadow:
+      `0 12px 20px -10px rgba(${
+        hexToRgb(successColor[0])
+      },.28), 0 4px 20px 0 rgba(${
+        hexToRgb(blackColor)
+      },.12), 0 7px 8px -5px rgba(${
+        hexToRgb(successColor[0])
+      },.2)`,
+    '&:hover,&:focus': {
+      backgroundColor: successColor[0],
+      boxShadow:
+        `0 12px 20px -10px rgba(${
+          hexToRgb(successColor[0])
+        },.28), 0 4px 20px 0 rgba(${
+          hexToRgb(blackColor)
+        },.12), 0 7px 8px -5px rgba(${
+          hexToRgb(successColor[0])
+        },.2)`,
+    },
   },
 }));

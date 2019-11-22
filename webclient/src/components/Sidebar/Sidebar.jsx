@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import classNames from 'classnames';
 import gravatar from 'gravatar';
 import PropTypes from 'prop-types';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   List,
   ListItemAvatar,
@@ -20,13 +20,16 @@ import { AuthContext } from '../Auth/AuthProvider';
 import useStyles from './styles';
 
 const Sidebar = ({
-  path, routes,
+  routes,
 }) => {
   const classes = useStyles();
   const { email, username, logout } = useContext(AuthContext);
+  const path = useLocation();
+  console.log(path);
 
   function activeRoute(routeName) {
-    return path === routeName;
+    console.log(path.pathname, routeName);
+    return path.pathname === routeName;
   }
 
   const links = (
@@ -34,10 +37,7 @@ const Sidebar = ({
       <List className={classes.list}>
         {routes.map((prop) => {
           const listItemClasses = classNames({
-            [` ${classes.green}`]: activeRoute(prop.layout + prop.path),
-          });
-          const whiteFontClasses = classNames({
-            [` ${classes.whiteFont}`]: activeRoute(prop.layout + prop.path),
+            [` ${classes.green}`]: activeRoute(prop.path),
           });
           return prop.href ? (
             <a
@@ -46,20 +46,12 @@ const Sidebar = ({
               key={prop.name}
             >
               <ListItem button className={classes.itemLink + listItemClasses}>
-                {typeof prop.icon === 'string' ? (
-                  <Icon
-                    className={classNames(classes.itemIcon, whiteFontClasses)}
-                  >
-                    {prop.icon}
-                  </Icon>
-                ) : (
-                  <prop.icon
-                    className={classNames(classes.itemIcon, whiteFontClasses)}
-                  />
-                )}
+                <prop.icon
+                  className={classes.itemIcon}
+                />
                 <ListItemText
                   primary={prop.name}
-                  className={classNames(classes.itemText, whiteFontClasses)}
+                  className={classes.itemText}
                   disableTypography
                 />
               </ListItem>
@@ -72,20 +64,12 @@ const Sidebar = ({
               key={prop.name}
             >
               <ListItem button className={classes.itemLink + listItemClasses}>
-                {typeof prop.icon === 'string' ? (
-                  <Icon
-                    className={classNames(classes.itemIcon, whiteFontClasses)}
-                  >
-                    {prop.icon}
-                  </Icon>
-                ) : (
-                  <prop.icon
-                    className={classNames(classes.itemIcon, whiteFontClasses)}
-                  />
-                )}
+                <prop.icon
+                  className={classes.itemIcon}
+                />
                 <ListItemText
                   primary={prop.name}
-                  className={classNames(classes.itemText, whiteFontClasses)}
+                  className={classes.itemText}
                   disableTypography
                 />
               </ListItem>
@@ -112,7 +96,7 @@ const Sidebar = ({
       </Container>
     </>
   );
-  const brand = (
+  const profile = (
     <div className={classes.logo}>
       <ListItem>
         <ListItemAvatar>
@@ -135,7 +119,7 @@ const Sidebar = ({
           paper: classes.drawerPaper,
         }}
       >
-        {brand}
+        {profile}
         <div className={classes.sidebarWrapper}>
           {links}
         </div>
@@ -147,7 +131,6 @@ const Sidebar = ({
   );
 };
 Sidebar.propTypes = {
-  path: PropTypes.string.isRequired,
   routes: PropTypes.array.isRequired,
 };
 
