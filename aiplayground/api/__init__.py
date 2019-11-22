@@ -8,7 +8,7 @@ authorizations = {
     "basicauth": {"type": "basic"},
     "bearertoken": {"type": "apiKey", "in": "header", "name": "Authorization"},
 }
-blueprint = Blueprint("api", __name__)
+blueprint = Blueprint("api", __name__, url_prefix="/api/v1")
 api = Api(
     blueprint,
     title="Asimov's Playground",
@@ -16,6 +16,7 @@ api = Api(
     description="A tournament server for AI agents to play board games",
     authorizations=authorizations,
     security=["bearertoken"],
+    base_url="/api/v1",
 )
 for schema in [auth_schema] + players_schemas + rooms_schemas:
     api.models[schema.name] = schema

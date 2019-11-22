@@ -53,7 +53,7 @@ class PlayerClient(socketio.ClientNamespace):
             if v["status"] == "lobby" and v["game"] in all_players
         ]
         if not lobbies:
-            logger.warning("No active lobbies found, sleeping for 2s")
+            logger.warning("No verified lobbies found, sleeping for 2s")
             time.sleep(2)
             ListMessage().send(sio=self, callback=self.rooms_callback)
             return
