@@ -1,4 +1,6 @@
 from functools import partial
+from typing import Any, Dict, Tuple
+
 from flask_socketio import Namespace
 from flaskplusplus import logger
 from flaskplusplus.utils import optional_jwt_in_request
@@ -202,9 +204,12 @@ class GameBroker(Namespace):
             msg.send(self, to=room.broadcast_sid)
 
     @expect(ListMessage)
-    def on_list(self, sid: PlayerSID, msg: ListMessage) -> None:
-        RoomsMessage(
-            rooms={
+    def on_list(
+        self, sid: PlayerSID, msg: ListMessage
+    ) -> Tuple[str, Dict[RoomId, Dict[str, Any]]]:
+        return (
+            "message",
+            {
                 room.id: {
                     "name": room.name,
                     "game": room.game,
@@ -213,5 +218,5 @@ class GameBroker(Namespace):
                     "status": room.status,
                 }
                 for room in Room.list(status="lobby")
-            }
-        ).send(sio=self, to=sid)
+            },
+        )

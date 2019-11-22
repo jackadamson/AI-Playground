@@ -34,13 +34,15 @@ class MessageBase(JsonSchemaMixin):
             logger.debug(f"Sending message {message_name} to {to!r}:\n{self!r}")
             sio.emit(message_name, asdict(self), room=to, callback=self.callback)
 
-    def callback(self, msgtype=None, error=None):
+    def callback(self, msgtype=None, *args):
         if msgtype == "fail":
+            error = args[1]
             raise all_exceptions[error["error"]](
                 f"{error['details']!r},\nReceived in response to: {self!r}"
             )
         elif self._callback:
-            self._callback()
+            logger.debug(f"Recv Callback: msgtype={msgtype!r}, args={args!r}")
+            self._callback(*args)
 
 
 # Sent from broker

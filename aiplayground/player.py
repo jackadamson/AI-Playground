@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Optional, Type, Dict
 from time import sleep
 import socketio
 from socketio.exceptions import ConnectionError
@@ -41,21 +41,21 @@ class PlayerClient(socketio.ClientNamespace):
         self.game_name = None
         self.room_name = None
         self.player = None
-        ListMessage().send(sio=self)
+        ListMessage().send(sio=self, callback=self.rooms_callback)
 
-    @expect(RoomsMessage)
-    def on_rooms(self, msg: RoomsMessage):
+    def rooms_callback(self, rooms: Dict[str, Dict]):
         if self.room_id is not None:
+            logger.warning("Received rooms callback after joining a room")
             return
         lobbies = [
             (k, v["game"], v["name"])
-            for k, v in msg.rooms.items()
+            for k, v in rooms.items()
             if v["status"] == "lobby" and v["game"] in all_players
         ]
         if not lobbies:
             logger.warning("No active lobbies found, sleeping for 2s")
             time.sleep(2)
-            ListMessage().send(sio=self)
+            ListMessage().send(sio=self, callback=self.rooms_callback)
             return
         self.room_id, self.game_name, self.room_name = lobbies[0]
         JoinMessage(roomid=self.room_id, name=self.player_name).send(sio=self)
