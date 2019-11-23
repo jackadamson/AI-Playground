@@ -1,4 +1,6 @@
 import random
+import logging
+from time import sleep
 from aiplayground.logging import logger
 from aiplayground.types import GameName, Move
 from aiplayground.players.base import BasePlayer
@@ -11,6 +13,8 @@ class TicTacToeRandomPlayer(BasePlayer):
     def get_move(self) -> Move:
         assert self.board is not None
         logger.debug(self.board)
+        if logger.isEnabledFor(logging.DEBUG):
+            sleep(0.5)
         available_moves = [
             {"row": row, "col": col}
             for row in range(3)

@@ -13,9 +13,8 @@ from aiplayground.messages import (
     GamestateMessage,
     JoinMessage,
     JoinedMessage,
-    FinishMessage,
+    FinishedMessage,
     ListMessage,
-    RoomsMessage,
     MoveMessage,
 )
 from aiplayground.types import PlayerId, RoomId, RoomName, GameName, PlayerName
@@ -84,8 +83,8 @@ class PlayerClient(socketio.ClientNamespace):
                 sio=self
             )
 
-    @expect(FinishMessage)
-    def on_finish(self, msg: FinishMessage):
+    @expect(FinishedMessage)
+    def on_finished(self, msg: FinishedMessage):
         assert self.player_id is not None
         assert msg.scores is not None
         if msg.roomid != self.room_id:

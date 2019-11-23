@@ -13,7 +13,6 @@ from aiplayground.types import (
     RoomName,
     GameName,
     SioSID,
-    RoomDict,
 )
 from dataclasses_jsonschema import JsonSchemaMixin
 
@@ -120,18 +119,7 @@ class RoomCreatedMessage(MessageBase):
 
 
 @dataclass
-class RoomsMessage(MessageBase):
-    """
-    :param dict rooms: The rooms that are currently in a lobby state
-
-    Message from broker to a potential player listing available rooms
-    """
-
-    rooms: Dict[RoomId, RoomDict]
-
-
-@dataclass
-class JoinAcknowledgement(MessageBase):
+class JoinAcknowledgementMessage(MessageBase):
     """
     :param str roomid: ID of room that the player joined
     :param str playerid: Player that acknowledged joining the room
@@ -141,6 +129,25 @@ class JoinAcknowledgement(MessageBase):
 
     roomid: RoomId
     playerid: PlayerId
+
+
+@dataclass
+class FinishedMessage(MessageBase):
+    """
+    :param str roomid: Room that finished the game
+    :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
+    :param dict|None scores: The scores of the players in the game
+    :param str|None reason: Why the game finished abnormally
+    :param str|None fault: Player tha caused the game to end abnormally
+
+    Message from broker to player indicating a game finished
+    """
+
+    roomid: RoomId
+    normal: bool
+    scores: Optional[Dict[PlayerId, int]] = None
+    reason: Optional[str] = None
+    fault: Optional[PlayerId] = None
 
 
 # Sent from server
@@ -267,3 +274,12 @@ class ListMessage(MessageBase):
     """
 
     pass
+
+
+@dataclass
+class SpectateMessage(MessageBase):
+    """
+    :param str roomid: Room to spectate
+
+    Spectator subscribes to state updates for a game
+    """

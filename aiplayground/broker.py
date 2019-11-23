@@ -21,20 +21,22 @@ from aiplayground.messages import (
     JoinSuccessMessage,
     MoveMessage,
     ListMessage,
-    RoomsMessage,
     FinishMessage,
+    FinishedMessage,
     GamestateMessage,
     JoinedMessage,
     PlayerMoveMessage,
     RegisterMessage,
     RoomCreatedMessage,
-    JoinAcknowledgement,
+    JoinAcknowledgementMessage,
+    SpectateMessage,
 )
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.api.players import Player
 from aiplayground.types import (
     GameServerSID,
     PlayerSID,
+    SpectatorSID,
     RoomId,
     PlayerId,
 )
@@ -43,7 +45,7 @@ from aiplayground.types import (
 class GameBroker(Namespace):
     def acknowledge_join(self, room_id: RoomId, player_id: PlayerId) -> None:
         room = Room.get(room_id)
-        JoinAcknowledgement(roomid=room_id, playerid=player_id).send(
+        JoinAcknowledgementMessage(roomid=room_id, playerid=player_id).send(
             sio=self, to=room.server_sid
         )
 
@@ -91,7 +93,7 @@ class GameBroker(Namespace):
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         assert player is not None
         player.update(joined=True, game_role=msg.gamerole)
-        self.enter_room(player.sid, f"room-{room.id}")
+        self.enter_room(player.sid, room.broadcast_sid)
         JoinedMessage(
             roomid=msg.roomid, playerid=msg.playerid, gamerole=msg.gamerole
         ).send(
@@ -200,8 +202,8 @@ class GameBroker(Namespace):
         if room.status == "finished":
             raise GameNotRunning
         else:
-            room.update(status="finished")
-            msg.send(self, to=room.broadcast_sid)
+            FinishedMessage.from_dict(msg.to_dict()).send(self, to=room.broadcast_sid)
+        room.update(status="finished")
 
     @expect(ListMessage)
     def on_list(
@@ -218,5 +220,20 @@ class GameBroker(Namespace):
                     "status": room.status,
                 }
                 for room in Room.list(status="lobby")
+            },
+        )
+
+    @expect(SpectateMessage)
+    def on_spectate(self, sid: SpectatorSID, msg: SpectateMessage) -> Tuple[str, Dict]:
+        room, _ = get_room_player(sid, msg.roomid, None)
+        self.enter_room(sid, room.broadcast_sid)
+        self.enter_room(sid, room.spectator_sid)
+        return (
+            "message",
+            {
+                "board": room.board,
+                "status": room.status,
+                "players": {player.id: player.name for player in room.players},
+                "turn": room.turn,
             },
         )

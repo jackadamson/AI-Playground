@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI = env.str(
         "DATABASE_URL", default=f"sqlite:////tmp/asimovdev-{token_urlsafe(8)}.db"
     )
+    LOG_LEVEL = env.str("LOG_LEVEL", default="INFO")
 
     # For a player
     # Name for player

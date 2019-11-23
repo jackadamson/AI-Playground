@@ -28,14 +28,18 @@ class Room(Base):
     server_sid: GameServerSID = Column(String, nullable=False)
     status = Column(String, default="lobby")
     board: Board = Column(JSONColumn, default={})
-    turn = Column(String, ForeignKey("players.id"), nullable=True)
+    turn: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
     normal_finish = Column(Boolean, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     players: List[Player] = relationship("Player", foreign_keys=[Player.room_id])
 
     @property
-    def broadcast_sid(self):
-        return BroadcastSID(f"room-{self.id}")
+    def broadcast_sid(self) -> BroadcastSID:
+        return BroadcastSID(f"room_{self.id}")
+
+    @property
+    def spectator_sid(self) -> BroadcastSID:
+        return BroadcastSID(f"room_spectator_{self.id}")
 
 
 class GameState(Base):

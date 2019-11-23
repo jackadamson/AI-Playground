@@ -23,6 +23,7 @@ from aiplayground.messages import (
     RegisterMessage,
     JoinSuccessMessage,
     JoinFailMessage,
+    JoinAcknowledgementMessage,
     GameUpdateMessage,
     PlayerMoveMessage,
     FinishMessage,
@@ -66,7 +67,8 @@ class GameServer(socketio.ClientNamespace):
             logger.info("Connected")
             self.initialize()
 
-    def player_added(self):
+    @expect(JoinAcknowledgementMessage)
+    def on_joinacknowledgement(self, msg: JoinAcknowledgementMessage):
         count = self.player_counter.increment_then_get()
         if count == self.game.max_players:
             self.game.start()
@@ -97,7 +99,7 @@ class GameServer(socketio.ClientNamespace):
                 self.game.add_player(msg.playerid)
                 # Game is not ready to start
                 JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid).send(
-                    sio=self, callback=self.player_added
+                    sio=self
                 )
 
             except (GameFull, ExistingPlayer) as e:
@@ -171,7 +173,7 @@ def main():
             break
         except ConnectionError:
             print(
-                f"Connection failed (attempt {i+1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
+                f"Connection failed (attempt {i + 1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
             )
             sleep(2)
 

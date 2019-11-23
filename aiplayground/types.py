@@ -13,7 +13,8 @@ PlayerName = NewType("PlayerName", str)
 PlayerSID = NewType("PlayerSID", str)
 GameServerSID = NewType("GameServerSID", str)
 BroadcastSID = NewType("BroadcastSID", str)
-SioSID = Union[PlayerSID, GameServerSID, BroadcastSID]
+SpectatorSID = NewType("SpectatorSID", str)
+SioSID = Union[PlayerSID, GameServerSID, BroadcastSID, SpectatorSID]
 RoomDict = Dict[str, Any]
 
 
