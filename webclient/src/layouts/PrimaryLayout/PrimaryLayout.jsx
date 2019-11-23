@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Redirect, Route, Switch } from 'react-router';
+import classNames from 'classnames';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import BubbleChart from '@material-ui/icons/BubbleChart';
 import Person from '@material-ui/icons/Person';
@@ -51,7 +52,11 @@ const AuthLayout = () => {
   return (
     <div className={classes.wrapper}>
       <Sidebar routes={routes} collapsed={collapsed} setCollapsed={setCollapsed} />
-      <div className={classes.mainPanel}>
+      <div className={classNames(
+        classes.mainPanel,
+        collapsed ? classes.collapsedMainPanel : classes.openMainPanel,
+      )}
+      >
         <div className={classes.content}>
           <div className={classes.container}>{switchRoutes}</div>
         </div>

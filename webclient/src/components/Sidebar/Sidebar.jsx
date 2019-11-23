@@ -11,9 +11,10 @@ import {
   Avatar,
   Drawer,
   Container,
-  Typography,
+  Tooltip,
 } from '@material-ui/core';
-
+import CollapseIcon from '@material-ui/icons/ArrowBackIos';
+import ExpandIcon from '@material-ui/icons/ArrowForwardIos';
 import LockIcon from '@material-ui/icons/Lock';
 import { AuthContext } from '../Auth/AuthProvider';
 import useStyles from './styles';
@@ -26,17 +27,14 @@ const Sidebar = ({
   const path = useLocation();
 
   const activeRoute = (routeName) => path.pathname.startsWith(routeName);
-  const innerLink = (prop) => {
-    const listItemClasses = classNames({
-      [` ${classes.green}`]: activeRoute(prop.path),
-    });
-    return (
+  const innerLink = (prop) => (
+    <Tooltip title={prop.name} disableHoverListener={!collapsed}>
       <ListItem
         button
         className={classNames(
           collapsed ? classes.itemLinkNarrow : classes.itemLinkWide,
+          activeRoute(prop.path) ? classes.green : classes.inactive,
           classes.itemLink,
-          listItemClasses,
         )}
         onClick={prop.onClick}
       >
@@ -49,8 +47,8 @@ const Sidebar = ({
           disableTypography
         />
       </ListItem>
-    );
-  };
+    </Tooltip>
+  );
 
   const links = (
     <>
@@ -75,31 +73,22 @@ const Sidebar = ({
         )))}
       </List>
       <Container className={classNames(
+        classes.collapseOuter,
+        collapsed ? classes.closed : classes.open,
+      )}
+      >
+        {innerLink({
+          name: 'Collapse',
+          onClick: () => setCollapsed(!collapsed),
+          icon: collapsed ? ExpandIcon : CollapseIcon,
+        })}
+      </Container>
+      <Container className={classNames(
         classes.logoutOuter,
         collapsed ? classes.closed : classes.open,
       )}
       >
-        <Typography
-          className={classNames(classes.item, classes.logout)}
-          component="span"
-        >
-          <ListItem
-            button
-            className={classNames(
-              collapsed ? classes.itemLinkNarrow : classes.itemLinkWide,
-              classes.itemLink,
-            )}
-          >
-            <LockIcon
-              className={classNames(classes.itemIcon)}
-            />
-            <ListItemText
-              primary="Logout"
-              className={collapsed ? classes.hidden : classes.itemText}
-              disableTypography
-            />
-          </ListItem>
-        </Typography>
+        {innerLink({ name: 'Logout', onClick: logout, icon: LockIcon })}
       </Container>
     </>
   );

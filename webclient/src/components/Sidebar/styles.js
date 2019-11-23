@@ -1,6 +1,12 @@
 import { makeStyles } from '@material-ui/core';
 import {
-  drawerWidthOpen, drawerWidthClosed, boxShadow, successColor, hexToRgb, blackColor,
+  drawerWidthOpen,
+  drawerWidthClosed,
+  boxShadow,
+  successColor,
+  hexToRgb,
+  blackColor,
+  transition,
 } from '../../assets/styles/commonStyles';
 
 export default makeStyles((theme) => ({
@@ -49,13 +55,14 @@ export default makeStyles((theme) => ({
   },
   logout: {},
   drawerPaper: {
+    ...transition,
     backgroundColor: '#111',
     border: 'none',
     position: 'fixed',
     top: '0',
     bottom: '0',
     left: '0',
-    zIndex: '1',
+    zIndex: '100',
     ...boxShadow,
     width: drawerWidthOpen,
     [theme.breakpoints.up('md')]: {
@@ -92,7 +99,7 @@ export default makeStyles((theme) => ({
   },
   itemLink: {
     minHeight: 50,
-    transition: 'all 300ms linear',
+    ...transition,
     margin: '10px 15px 0',
     borderRadius: '3px',
     position: 'relative',
@@ -151,6 +158,11 @@ export default makeStyles((theme) => ({
     overflow: 'auto',
     zIndex: '4',
     overflowScrolling: 'touch',
+  },
+  inactive: {
+    '&:hover': {
+      backgroundColor: 'rgba(200, 200, 200, 0.4)',
+    },
   },
   green: {
     backgroundColor: successColor[0],

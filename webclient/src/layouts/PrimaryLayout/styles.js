@@ -1,6 +1,7 @@
 import { makeStyles } from '@material-ui/core';
 import {
   drawerWidthOpen,
+  drawerWidthClosed,
   transition,
 } from '../../assets/styles/commonStyles';
 
@@ -21,8 +22,13 @@ export default makeStyles((theme) => ({
     overflowScrolling: 'touch',
   },
   content: {
-    marginTop: '32px',
     padding: '30px 15px',
-    minHeight: 'calc(100vh - 123px)',
+    minHeight: '100vh',
+  },
+  collapsedMainPanel: {
+    width: `calc(100% - ${drawerWidthClosed}px)`,
+  },
+  openMainPanel: {
+    width: `calc(100% - ${drawerWidthOpen}px)`,
   },
 }));

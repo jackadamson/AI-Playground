@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Typography } from '@material-ui/core';
 import axios from 'axios';
 import MaterialTable from 'material-table';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import PersonalVideoIcon from '@material-ui/icons/PersonalVideo';
 import MaterialTableIcons from '../MaterialTableIcons';
 import useStyles from './styles';
 
@@ -35,6 +37,16 @@ const Lobbies = () => {
           },
         ]}
         data={lobbies}
+        actions={[
+          { icon: PlayArrowIcon, tooltip: 'Join Lobby' },
+          { icon: PersonalVideoIcon, tooltip: 'Spectate' },
+        ]}
+        options={{
+          actionsColumnIndex: -1,
+          actionsCellStyle: {
+            textAlign: 'center',
+          },
+        }}
       />
     </div>
   );
