@@ -53,7 +53,7 @@ const Sidebar = ({
   const links = (
     <>
       <List className={classes.list}>
-        {routes.map((prop) => (prop.href ? (
+        {routes.filter((prop) => prop.link).map((prop) => (prop.href ? (
           <a
             href={prop.href}
             className={classes.item}

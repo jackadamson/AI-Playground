@@ -9,6 +9,7 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import useStyles from './styles';
 
 import Lobbies from '../../components/Lobbies/Lobbies';
+import Spectate from '../../components/Spectate/Spectate';
 
 const routes = [
   {
@@ -16,17 +17,27 @@ const routes = [
     name: 'Lobbies',
     icon: BubbleChart,
     component: Lobbies,
+    link: true,
   },
   {
     path: '/profile',
     name: 'Profile',
     icon: Person,
     component: Lobbies,
+    link: true,
+  },
+  {
+    path: '/spectate/:roomId',
+    link: false,
+    icon: Person,
+    name: 'Spectate',
+    component: Spectate,
   },
   {
     href: '/api/v1/',
     name: 'API Docs',
     icon: DashboardIcon,
+    link: true,
   },
 ];
 

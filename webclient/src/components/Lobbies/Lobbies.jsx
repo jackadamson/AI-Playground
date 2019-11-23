@@ -4,7 +4,8 @@ import axios from 'axios';
 import MaterialTable from 'material-table';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PersonalVideoIcon from '@material-ui/icons/PersonalVideo';
-import MaterialTableIcons from '../MaterialTableIcons';
+import MaterialTableIcons from './MaterialTableIcons';
+import MaterialTableAction from './MaterialTableAction';
 import useStyles from './styles';
 
 
@@ -38,9 +39,10 @@ const Lobbies = () => {
         ]}
         data={lobbies}
         actions={[
-          { icon: PlayArrowIcon, tooltip: 'Join Lobby' },
-          { icon: PersonalVideoIcon, tooltip: 'Spectate' },
+          { icon: PlayArrowIcon, tooltip: 'Join Lobby', base: '/play' },
+          { icon: PersonalVideoIcon, tooltip: 'Spectate', base: '/spectate' },
         ]}
+        components={{ Action: MaterialTableAction }}
         options={{
           actionsColumnIndex: -1,
           actionsCellStyle: {
@@ -53,3 +55,4 @@ const Lobbies = () => {
 };
 
 export default Lobbies;
+
