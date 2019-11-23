@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core';
 import {
-  drawerWidth,
+  drawerWidthOpen,
   transition,
 } from '../../assets/styles/commonStyles';
 
@@ -12,7 +12,7 @@ export default makeStyles((theme) => ({
   },
   mainPanel: {
     backgroundColor: theme.palette.background.default,
-    width: `calc(100% - ${drawerWidth}px)`,
+    width: `calc(100% - ${drawerWidthOpen}px)`,
     overflow: 'auto',
     position: 'relative',
     float: 'right',

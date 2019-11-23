@@ -20,6 +20,7 @@
     "classnames": "^2.2.6",
     "gravatar": "^1.8.0",
     "history": "^4.10.1",
+    "material-table": "^1.54.1",
     "prop-types": "^15.7.2",
     "react": "latest",
     "react-dom": "latest",

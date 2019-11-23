@@ -1,4 +1,5 @@
-export const drawerWidth = 260;
+export const drawerWidthOpen = 260;
+export const drawerWidthClosed = 84;
 export const primaryColor = ['#9c27b0', '#ab47bc', '#8e24aa', '#af2cc5'];
 export const warningColor = ['#ff9800', '#ffa726', '#fb8c00', '#ffa21a'];
 export const dangerColor = ['#f44336', '#ef5350', '#e53935', '#f55a4e'];

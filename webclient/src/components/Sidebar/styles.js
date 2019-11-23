@@ -1,9 +1,24 @@
 import { makeStyles } from '@material-ui/core';
 import {
-  drawerWidth, boxShadow, successColor, hexToRgb, blackColor,
+  drawerWidthOpen, drawerWidthClosed, boxShadow, successColor, hexToRgb, blackColor,
 } from '../../assets/styles/commonStyles';
 
 export default makeStyles((theme) => ({
+  hidden: {
+    display: 'none',
+  },
+  itemLinkWide: {
+    width: 'auto',
+  },
+  itemLinkNarrow: {
+    width: drawerWidthClosed - 30,
+  },
+  collapseOuter: {
+    position: 'absolute',
+    bottom: '90px',
+    height: '50px',
+    padding: 0,
+  },
   background: {
     backgroundImage: 'url(http://source.unsplash.com/HxX3H32DYjA/768x1366)',
     position: 'absolute',
@@ -29,7 +44,6 @@ export default makeStyles((theme) => ({
   logoutOuter: {
     position: 'absolute',
     bottom: '32px',
-    width: '260px',
     height: '50px',
     padding: 0,
   },
@@ -43,16 +57,23 @@ export default makeStyles((theme) => ({
     left: '0',
     zIndex: '1',
     ...boxShadow,
-    width: drawerWidth,
+    width: drawerWidthOpen,
     [theme.breakpoints.up('md')]: {
-      width: drawerWidth,
+      width: drawerWidthOpen,
       position: 'fixed',
       height: '100%',
     },
   },
+  drawerCollapsed: {
+    width: drawerWidthClosed,
+  },
+  drawerOpen: {
+    width: drawerWidthOpen,
+  },
   item: {
     position: 'relative',
     display: 'block',
+    minHeight: 50,
     textDecoration: 'none',
     '&:hover,&:focus,&:visited,&': {
       color: '#fff',
@@ -70,7 +91,7 @@ export default makeStyles((theme) => ({
     color: 'rgba(255, 255, 255, 0.8)',
   },
   itemLink: {
-    width: 'auto',
+    minHeight: 50,
     transition: 'all 300ms linear',
     margin: '10px 15px 0',
     borderRadius: '3px',
@@ -108,6 +129,9 @@ export default makeStyles((theme) => ({
       backgroundColor: 'rgba(180, 180, 180, 0.3)',
     },
   },
+  logoInner: {
+    paddingLeft: 8,
+  },
   logoLink: {
     padding: '5px 0',
     display: 'block',
@@ -125,7 +149,6 @@ export default makeStyles((theme) => ({
     position: 'relative',
     height: 'calc(100vh - 75px)',
     overflow: 'auto',
-    width: '260px',
     zIndex: '4',
     overflowScrolling: 'touch',
   },

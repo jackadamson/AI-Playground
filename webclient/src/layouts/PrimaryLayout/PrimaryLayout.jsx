@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Redirect, Route, Switch } from 'react-router';
-import axios from 'axios';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import BubbleChart from '@material-ui/icons/BubbleChart';
 import Person from '@material-ui/icons/Person';
@@ -47,10 +46,11 @@ const switchRoutes = (
 
 const AuthLayout = () => {
   const classes = useStyles();
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className={classes.wrapper}>
-      <Sidebar routes={routes} />
+      <Sidebar routes={routes} collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className={classes.mainPanel}>
         <div className={classes.content}>
           <div className={classes.container}>{switchRoutes}</div>

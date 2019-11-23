@@ -41,12 +41,19 @@ const AuthProvider = ({ children }) => {
     axios.defaults.headers.common.Authorization = token ? `Bearer ${token}` : '';
   }, [token]);
   useEffect(() => {
-    axios.get('/auth/me')
-      .then((resp) => {
-        setEmail(resp.data.email);
-        setUsername(resp.data.username);
-        setRoles(resp.data.roles);
-      });
+    if (token) {
+      axios.get('/auth/me')
+        .then((resp) => {
+          setEmail(resp.data.email);
+          setUsername(resp.data.username);
+          setRoles(resp.data.roles);
+        })
+        .catch(() => {
+          setEmail('');
+          setUsername('');
+          setRoles('');
+        });
+    }
   }, [token]);
   return (
     <AuthContext.Provider value={{

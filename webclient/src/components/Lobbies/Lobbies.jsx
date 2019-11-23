@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Typography } from '@material-ui/core';
 import axios from 'axios';
+import MaterialTable from 'material-table';
+import MaterialTableIcons from '../MaterialTableIcons';
 import useStyles from './styles';
 
 
@@ -17,12 +19,23 @@ const Lobbies = () => {
       <Typography component="h5" variant="h5">
         Asimov's Playground
       </Typography>
-      <Typography variant="subtitle2">
-        Lobbies
-      </Typography>
-      <Typography variant="body2">
-        {JSON.stringify(lobbies)}
-      </Typography>
+
+      <MaterialTable
+        title="Lobbies"
+        icons={MaterialTableIcons}
+        columns={[
+          { title: 'Name', field: 'name' },
+          { title: 'Game', field: 'game' },
+          { title: 'Status', field: 'status' },
+          {
+            title: 'Players',
+            render: (rowData) => (
+              `${rowData.players.length}/${rowData.maxplayers}`
+            ),
+          },
+        ]}
+        data={lobbies}
+      />
     </div>
   );
 };
