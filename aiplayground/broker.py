@@ -69,7 +69,7 @@ class GameBroker(Namespace):
         identity = optional_jwt_in_request()
         player: Player = Player.create(
             name=msg.name,
-            room_id=msg.roomid,
+            room=msg.roomid,
             user_id=identity["id"] if identity is not None else None,
             sid=sid,
         )
@@ -230,7 +230,7 @@ class GameBroker(Namespace):
 
     @expect(SpectateMessage)
     def on_spectate(self, sid: SpectatorSID, msg: SpectateMessage) -> Tuple[str, Dict]:
-        room, _ = get_room_player(sid, msg.roomid, None)
+        room, _ = get_room_player(sid, msg.roomid, None, check_server=False)
         self.enter_room(sid, room.broadcast_sid)
         self.enter_room(sid, room.spectator_sid)
         return (

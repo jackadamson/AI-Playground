@@ -1,5 +1,4 @@
-from typing import Optional, Dict
-from uuid import uuid4
+from typing import Optional
 from dataclasses import dataclass, field
 from redorm import RedormBase, one_to_many, many_to_one
 from redorm.types import DateTime

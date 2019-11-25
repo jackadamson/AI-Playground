@@ -1,6 +1,5 @@
 from flask_restplus import Model, fields
 from aiplayground.api.players import player_schema
-from aiplayground.api.rooms.models import GameState
 
 game_state_schema = Model(
     "Game State",
@@ -59,7 +58,7 @@ room_schema = Model(
         "maxplayers": fields.Integer(required=True),
         "states": fields.List(
             fields.Nested(game_state_schema),
-            attribute=lambda x: sorted(x.states, key=lambda y: y.epoch),
+            attribute=lambda x: sorted(x.states, key=lambda y: y.epoch or 0),
         ),
     },
 )

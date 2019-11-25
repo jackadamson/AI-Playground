@@ -283,3 +283,5 @@ class SpectateMessage(MessageBase):
 
     Spectator subscribes to state updates for a game
     """
+
+    roomid: RoomId

@@ -1,5 +1,4 @@
 from environs import Env
-from secrets import token_urlsafe
 from os import environ
 
 if environ.get("BROKER") == "true":
@@ -14,9 +13,6 @@ env.read_env()
 
 class Settings(BaseSettings):
     ALLOW_GUEST = env.bool("ALLOW_GUEST", default=True)
-    SQLALCHEMY_DATABASE_URI = env.str(
-        "DATABASE_URL", default=f"sqlite:////tmp/asimovdev-{token_urlsafe(8)}.db"
-    )
     LOG_LEVEL = env.str("LOG_LEVEL", default="INFO")
 
     # For a player
