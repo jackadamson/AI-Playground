@@ -1,4 +1,5 @@
 from typing import Optional, Tuple
+from redorm import InstanceNotFound
 from aiplayground.exceptions import (
     NoSuchPlayer,
     NoSuchRoom,
@@ -30,11 +31,12 @@ def get_room_player(
         raise UnauthorizedGameServer
     if playerid is None:
         return room, None
-    player = Player.get(playerid, relax=True)
-    if player is None:
-        raise NoSuchPlayer
+    try:
+        player = Player.get(playerid)
+    except InstanceNotFound as e:
+        raise NoSuchPlayer from e
     if not check_server and player.sid != sid:
         raise UnauthorizedPlayer
-    if player.room_id != roomid:
+    if player.room is not None and player.room.id != roomid:
         raise PlayerNotInRoom
     return room, player

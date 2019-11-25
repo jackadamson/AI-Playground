@@ -4,6 +4,7 @@ from typing import Any, Dict, Tuple
 from flask_socketio import Namespace
 from flaskplusplus import logger
 from flaskplusplus.utils import optional_jwt_in_request
+from redorm import InstanceNotFound
 from aiplayground.utils.broker import get_room_player
 from aiplayground.utils.expect import expect
 from aiplayground.exceptions import (
@@ -74,10 +75,11 @@ class GameBroker(Namespace):
         )
         logger.debug("Player requested to join a room")
         player_id = player.id
-        room: Room = Room.get(msg.roomid, relax=True)
-        if room is None:
-            raise NoSuchRoom
-        elif room.status != "lobby":
+        try:
+            room: Room = Room.get(msg.roomid)
+        except InstanceNotFound as e:
+            raise NoSuchRoom from e
+        if room.status != "lobby":
             raise GameAlreadyStarted
         else:
             logger.debug(f"Registering user")
@@ -159,8 +161,11 @@ class GameBroker(Namespace):
                     f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
                 )
                 r.send(sio=self, to=room.broadcast_sid)
-            state = GameState.get(id=msg.stateid, room_id=msg.roomid, relax=True)
-            if state is None:
+            try:
+                state = GameState.get(id=msg.stateid)
+                if state.room is not None and state.room.id != msg.roomid:
+                    raise InstanceNotFound
+            except InstanceNotFound:
                 GameState.create(
                     room_id=msg.roomid, epoch=msg.epoch, board=msg.board, turn=msg.turn
                 )
@@ -182,7 +187,7 @@ class GameBroker(Namespace):
             raise NotPlayersTurn
         else:
             state = GameState.create(
-                player_id=msg.playerid, room_id=msg.roomid, move=msg.move
+                player_id=msg.playerid, room=msg.roomid, move=msg.move
             )
             PlayerMoveMessage(
                 roomid=msg.roomid,

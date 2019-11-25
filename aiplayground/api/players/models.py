@@ -1,22 +1,20 @@
 from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime
-from sqlalchemy.orm import relationship
-from flaskplusplus import Base
-
+from dataclasses import dataclass, field
+from typing import Optional
+from redorm import RedormBase, many_to_one
+from redorm.types import DateTime
 from aiplayground.types import PlayerName, PlayerId, PlayerSID, GameRole, RoomId
 from aiplayground.api.players.schemas import player_schema
 
 
-class Player(Base):
-    __tablename__ = "players"
-    id: PlayerId
-    name: PlayerName = Column(String, nullable=False)
-    sid: PlayerSID = Column(String, nullable=False)
-    joined_at = Column(DateTime, default=datetime.now)
-    game_role: GameRole = Column(String, nullable=True)
-    joined = Column(Boolean, default=False, nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=True)
-    user = relationship("User", backref="players")
-    room_id: RoomId = Column(String, ForeignKey("rooms.id"), nullable=False)
-    room = relationship("Room", foreign_keys=[room_id])
+@dataclass
+class Player(RedormBase):
+    id: PlayerId = field(metadata={"unique": True})
+    name: PlayerName
+    sid: PlayerSID
+    game_role: Optional[GameRole]
+    joined: bool = field(default=False)
+    joined_at: DateTime = field(default_factory=datetime.now)
+    user = many_to_one("User", backref="players")
+    room = many_to_one("Room", backref="players")
     schema = player_schema

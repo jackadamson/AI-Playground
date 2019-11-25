@@ -1,10 +1,9 @@
-from typing import Optional, List
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Integer
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm.exc import NoResultFound
+from typing import Optional, Dict
+from uuid import uuid4
+from dataclasses import dataclass, field
+from redorm import RedormBase, one_to_many, many_to_one
+from redorm.types import DateTime
 from datetime import datetime
-from flaskplusplus import Base
-from flaskplusplus.database import JSONColumn
 from aiplayground.types import (
     PlayerId,
     RoomId,
@@ -16,22 +15,22 @@ from aiplayground.types import (
     GameServerSID,
     BroadcastSID,
 )
-from aiplayground.api.players import Player
 
 
-class Room(Base):
-    __tablename__ = "rooms"
-    id: RoomId
-    name: RoomName = Column(String, nullable=False)
-    game: GameName = Column(String, nullable=False)
-    maxplayers = Column(Integer, nullable=False)
-    server_sid: GameServerSID = Column(String, nullable=False)
-    status = Column(String, default="lobby")
-    board: Board = Column(JSONColumn, default={})
-    turn: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
-    normal_finish = Column(Boolean, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    players: List[Player] = relationship("Player", foreign_keys=[Player.room_id])
+@dataclass
+class Room(RedormBase):
+    id: RoomId = field(metadata={"unique": True})
+    name: RoomName
+    game: GameName
+    maxplayers: int
+    server_sid: GameServerSID
+    board: Optional[Board]
+    status: str = field(default="lobby", metadata={"index": True})
+    turn: Optional[PlayerId] = field(default=None)
+    normal_finish: Optional[bool] = field(default=None)
+    created_at: DateTime = field(default_factory=datetime.now)
+    players = one_to_many("Player", backref="room")
+    states = one_to_many("GameState", backref="room")
 
     @property
     def broadcast_sid(self) -> BroadcastSID:
@@ -42,44 +41,40 @@ class Room(Base):
         return BroadcastSID(f"room_spectator_{self.id}")
 
 
-class GameState(Base):
-    __tablename__ = "gamestates"
-    id: StateId
-    timestamp = Column(DateTime, default=datetime.now)
-    player_id: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
-    player = relationship("Player", backref="moves", foreign_keys=[player_id])
-
-    room_id: RoomId = Column(String, ForeignKey("rooms.id"), nullable=False)
-    room = relationship("Room", backref="states")
-
-    epoch = Column(Integer)
-    move: Move = Column(JSONColumn, nullable=True)
-    boardstate_id = Column(String, ForeignKey("boardstates.id"), nullable=True)
-    board = relationship("BoardState", lazy="joined")
-    turn: PlayerId = Column(String, ForeignKey("players.id"), nullable=True)
-
-    def __init__(self, board=None, **kwargs):
-        boardstate_id = BoardState.id_from_state(board)
-        # noinspection PyArgumentList
-        Base.__init__(self, boardstate_id=boardstate_id, **kwargs)
-
-    def update(self: "GameState", board=None, **kwargs):
-        if board is not None:
-            boardstate_id = BoardState.id_from_state(board)
-            return super().update(self, boardstate_id=boardstate_id, **kwargs)
-        else:
-            return super().update(self, commit=True, **kwargs)
+@dataclass
+class GameState(RedormBase):
+    id: StateId = field(metadata={"unique": True})
+    player = many_to_one("Player", backref="moves")
+    room = many_to_one("Room", backref="states")
+    epoch: Optional[int]
+    move: Optional[Move]
+    board: Optional[Board]
+    turn: Optional[PlayerId]
+    timestamp: DateTime = field(default_factory=datetime.now)
+    #
+    # def __init__(self, board=None, **kwargs):
+    #     boardstate_id = BoardState.id_from_state(board)
+    #     # noinspection PyArgumentList
+    #     SQLBase.__init__(self, boardstate_id=boardstate_id, **kwargs)
+    #
+    # def update(self: "GameState", board=None, **kwargs):
+    #     if board is not None:
+    #         boardstate_id = BoardState.id_from_state(board)
+    #         return super().update(self, boardstate_id=boardstate_id, **kwargs)
+    #     else:
+    #         return super().update(self, commit=True, **kwargs)
 
 
-class BoardState(Base):
-    __tablename__ = "boardstates"
-    state: Board = Column(JSONColumn, nullable=False, unique=True, index=True)
-
-    @classmethod
-    def id_from_state(cls, state: Optional[dict]) -> Optional[str]:
-        if state is None:
-            return None
-        try:
-            return cls.get(state=state).id
-        except NoResultFound:
-            return cls.create(state=state).id
+#
+# class BoardState(SQLBase):
+#     __tablename__ = "boardstates"
+#     state: Board = Column(JSONColumn, nullable=False, unique=True, index=True)
+#
+#     @classmethod
+#     def id_from_state(cls, state: Optional[dict]) -> Optional[str]:
+#         if state is None:
+#             return None
+#         try:
+#             return cls.get(state=state).id
+#         except NoResultFound:
+#             return cls.create(state=state).id

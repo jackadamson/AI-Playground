@@ -16,11 +16,6 @@ game_state_schema = Model(
             description="Identifies the player who made the move directly leading to the state",
             example="36cad58c-3421-4cb3-8773-cc8b0f0e808b",
         ),
-        "room_id": fields.String(
-            required=True,
-            description="UUIDv4 of the room the state occured in",
-            example="36cad58c-3421-4cb3-8773-cc8b0f0e808b",
-        ),
         "epoch": fields.Integer(
             required=True,
             description="The index of the state within the span of the game",
@@ -28,11 +23,7 @@ game_state_schema = Model(
         "move": fields.Raw(
             required=False, description="The actual move which lead to the state"
         ),
-        "board": fields.Raw(
-            required=False,
-            description="Current game state",
-            attribute=lambda x: x.board.state,
-        ),
+        "board": fields.Raw(required=False, description="Current game state",),
         "turn": fields.String(
             required=True,
             description="UUIDv4 of the player who should play next",
@@ -68,9 +59,7 @@ room_schema = Model(
         "maxplayers": fields.Integer(required=True),
         "states": fields.List(
             fields.Nested(game_state_schema),
-            attribute=lambda x: GameState.list(
-                order_by=GameState.epoch.asc(), room_id=x.id
-            ),
+            attribute=lambda x: sorted(x.states, key=lambda y: y.epoch),
         ),
     },
 )

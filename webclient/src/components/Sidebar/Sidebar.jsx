@@ -15,7 +15,7 @@ import {
 } from '@material-ui/core';
 import CollapseIcon from '@material-ui/icons/ArrowBackIos';
 import ExpandIcon from '@material-ui/icons/ArrowForwardIos';
-import LockIcon from '@material-ui/icons/Lock';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import { AuthContext } from '../Auth/AuthProvider';
 import useStyles from './styles';
 
@@ -88,7 +88,7 @@ const Sidebar = ({
         collapsed ? classes.closed : classes.open,
       )}
       >
-        {innerLink({ name: 'Logout', onClick: logout, icon: LockIcon })}
+        {innerLink({ name: 'Logout', onClick: logout, icon: ExitToAppIcon })}
       </Container>
     </>
   );
