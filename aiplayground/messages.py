@@ -50,6 +50,7 @@ class GamestateMessage(MessageBase):
     """
     :param dict board: New game board
     :param str roomid: ID of room that the state change occurred in
+    :param int epoch: Number of state updates that occured before this state update
     :param str playerid|None: Intended recipient of the message
     :param str|None turn: ID of player who's turn it is
 
@@ -58,6 +59,7 @@ class GamestateMessage(MessageBase):
 
     board: Board
     roomid: RoomId
+    epoch: int
     playerid: Optional[PlayerId]
     turn: Optional[PlayerId]
 

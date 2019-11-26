@@ -146,7 +146,11 @@ class GameBroker(Namespace):
             room.update(status="playing", turn=msg.turn)
             assert player is not None
             GamestateMessage(
-                board=msg.board, turn=msg.turn, roomid=msg.roomid, playerid=msg.playerid
+                board=msg.board,
+                turn=msg.turn,
+                roomid=msg.roomid,
+                playerid=msg.playerid,
+                epoch=msg.epoch,
             ).send(self, to=player.sid)
         else:
             room.update(status="playing", turn=msg.turn)
@@ -156,6 +160,7 @@ class GameBroker(Namespace):
                     turn=msg.turn,
                     roomid=msg.roomid,
                     playerid=msg.playerid,
+                    epoch=msg.epoch,
                 )
                 logger.debug(
                     f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
