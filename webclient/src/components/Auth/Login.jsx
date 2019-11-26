@@ -21,7 +21,7 @@ const Login = ({ authState, setAuthState, setToken }) => {
           setAuthState('authenticated');
         }
       })
-      .catch((err) => {
+      .catch(() => {
       });
   };
   const doGuestLogin = () => {

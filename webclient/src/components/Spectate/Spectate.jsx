@@ -19,7 +19,9 @@ const getColor = (status) => (status === undefined ? '' : statusColors[status]);
 
 const Spectate = ({ match: { params: { roomId } } }) => {
   const classes = useStyles();
-  const [room, setRoom] = useState({});
+  const [room, setRoom] = useState({
+    players: [],
+  });
   const [board, setBoard] = useState(null);
   useEffect(() => {
     axios.get(`/rooms/${roomId}`).then((resp) => {
@@ -30,31 +32,30 @@ const Spectate = ({ match: { params: { roomId } } }) => {
     if (room.game) {
       return;
     }
-    const update = (data) => {
-      console.log(data);
-      console.log(room);
-      console.log({ ...room, turn: data.turn, board: data.board });
+    socketio.on('gamestate', (data) => {
       setBoard(data.board);
-    };
-    const s = socketio.on('gamestate', update);
+    });
     socketio.emit('spectate', { roomid: roomId }, (_, data) => {
       setBoard(data.board);
     });
-  }, [room]);
+  }, [roomId, room.game]);
 
   const Game = Games[room.game];
   return (
     <>
       <div className={classes.mainArea}>
         <Typography component="h5" variant="h5">
-          Asimov's Playground
+          Asimov&apos;s Playground
         </Typography>
         <Typography variant="h6">
           {`Spectating ${room.name}`}
         </Typography>
         <span>
 State:
-          <Chip label={capitalize(room.status)} style={{ backgroundColor: getColor(room.status) }} />
+          <Chip
+            label={capitalize(room.status)}
+            style={{ backgroundColor: getColor(room.status) }}
+          />
         </span>
         <Container className={classes.mainArea}>
           {board && Game ? <Game board={board} /> : (<Typography variant="body2">Game not started</Typography>)}
@@ -78,6 +79,8 @@ State:
   );
 };
 Spectate.propTypes = {
-  match: PropTypes.shape({ params: PropTypes.shape({ roomId: PropTypes.string.isRequired }) }).isRequired,
+  match: PropTypes.shape({
+    params: PropTypes.shape({ roomId: PropTypes.string.isRequired }),
+  }).isRequired,
 };
 export default Spectate;

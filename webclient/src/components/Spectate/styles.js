@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core';
 
-export default makeStyles((theme) => ({
+export default makeStyles(() => ({
   mainArea: {
     width: 'calc(100% - 200px)',
     height: '100%',

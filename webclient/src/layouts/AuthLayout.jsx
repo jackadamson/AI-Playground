@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Grid, CssBaseline, Paper } from '@material-ui/core';
 
 import useStyles from '../components/Auth/styles';
@@ -16,6 +17,9 @@ const AuthLayout = ({ children }) => {
       </Grid>
     </Grid>
   );
+};
+AuthLayout.propTypes = {
+  children: PropTypes.element.isRequired,
 };
 
 export default AuthLayout;

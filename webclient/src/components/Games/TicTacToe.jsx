@@ -22,7 +22,6 @@ const useStyles = makeStyles((theme) => ({
 const icons = { x: <CrossIcon fontSize="inherit" />, o: <NaughtIcon fontSize="inherit" /> };
 const TicTacToe = ({ board: { grid } }) => {
   const classes = useStyles();
-  console.log(grid);
   return (
     <Grid container spacing={0}>
       {grid.flat().map((cell, idx) => (

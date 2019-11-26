@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-filename-extension */
 import React from 'react';
 import ReactDOM from 'react-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -6,6 +7,7 @@ import axios from 'axios';
 import App from './App';
 import theme from './theme';
 import config from './config';
+
 axios.defaults.baseURL = config.baseApiAddress;
 
 ReactDOM.render(

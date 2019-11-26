@@ -20,7 +20,7 @@ const Lobbies = () => {
   return (
     <div className={classes.paper}>
       <Typography component="h5" variant="h5">
-        Asimov's Playground
+        Asimov&apos;s Playground
       </Typography>
 
       <MaterialTable
@@ -55,4 +55,3 @@ const Lobbies = () => {
 };
 
 export default Lobbies;
-

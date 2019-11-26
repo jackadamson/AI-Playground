@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 import Login from './Login';
 
 export const AuthContext = React.createContext({});
@@ -69,6 +70,10 @@ const AuthProvider = ({ children }) => {
       )}
     </AuthContext.Provider>
   );
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.element.isRequired,
 };
 
 export default AuthProvider;
