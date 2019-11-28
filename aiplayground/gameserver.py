@@ -69,6 +69,8 @@ class GameServer(socketio.ClientNamespace):
 
     @expect(JoinAcknowledgementMessage)
     def on_joinacknowledgement(self, msg: JoinAcknowledgementMessage):
+        if self.room_id is None:
+            return
         count = self.player_counter.increment_then_get()
         if count == self.game.max_players:
             self.game.start()

@@ -10,9 +10,12 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 with open("aiplayground/__init__.py", "r") as f:
-    version = re.search(
+    version_match = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE
-    ).group(1)
+    )
+    if version_match is None:
+        raise ValueError("Version not found in aiplayerground/__init__.py")
+    version = version_match.group(1)
 
 with open("requirements.txt", "r") as f:
     requirements = [l for l in f.read().split("\n") if len(l) > 0]

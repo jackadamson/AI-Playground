@@ -139,8 +139,6 @@ class GameBroker(Namespace):
                     details="error: 'epoch' is required for non-private messages"
                 )
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
-        if room.status == "finished":
-            room.update(board=msg.board, turn=None)
 
         if msg.visibility == "private":
             room.update(status="playing", turn=msg.turn)
@@ -153,7 +151,10 @@ class GameBroker(Namespace):
                 epoch=msg.epoch,
             ).send(self, to=player.sid)
         else:
-            room.update(status="playing", turn=msg.turn)
+            if room.status == "finished":
+                room.update(board=msg.board, turn=None)
+            else:
+                room.update(status="playing", turn=msg.turn)
             if msg.visibility == "broadcast":
                 r = GamestateMessage(
                     board=msg.board,
@@ -167,7 +168,7 @@ class GameBroker(Namespace):
                 )
                 r.send(sio=self, to=room.broadcast_sid)
             try:
-                state = GameState.get(id=msg.stateid)
+                state = GameState.get(msg.stateid)
                 if state.room is not None and state.room.id != msg.roomid:
                     raise InstanceNotFound
             except InstanceNotFound:

@@ -28,7 +28,7 @@ class Room(RedormBase):
     turn: Optional[PlayerId] = field(default=None)
     normal_finish: Optional[bool] = field(default=None)
     created_at: DateTime = field(default_factory=datetime.now)
-    players = one_to_many("Player", backref="room")
+    players = one_to_many("Player", backref="room", lazy=False)
     states = one_to_many("GameState", backref="room")
 
     @property
@@ -45,10 +45,10 @@ class GameState(RedormBase):
     id: StateId = field(metadata={"unique": True})
     player = many_to_one("Player", backref="moves")
     room = many_to_one("Room", backref="states")
-    epoch: Optional[int]
-    move: Optional[Move]
-    board: Optional[Board]
-    turn: Optional[PlayerId]
+    epoch: Optional[int] = None
+    move: Optional[Move] = None
+    board: Optional[Board] = None
+    turn: Optional[PlayerId] = None
     timestamp: DateTime = field(default_factory=datetime.now)
     #
     # def __init__(self, board=None, **kwargs):
