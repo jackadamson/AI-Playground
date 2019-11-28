@@ -22,8 +22,6 @@ from aiplayground.messages import (
     JoinSuccessMessage,
     MoveMessage,
     ListMessage,
-    FinishMessage,
-    FinishedMessage,
     GamestateMessage,
     JoinedMessage,
     PlayerMoveMessage,
@@ -94,16 +92,29 @@ class GameBroker(Namespace):
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         assert player is not None
-        player.update(joined=True, game_role=msg.gamerole)
+        player.update(joined=True, gamerole=msg.gamerole)
         self.enter_room(player.sid, room.broadcast_sid)
         JoinedMessage(
-            roomid=msg.roomid, playerid=msg.playerid, gamerole=msg.gamerole
+            roomid=msg.roomid,
+            playerid=msg.playerid,
+            name=player.name,
+            gamerole=msg.gamerole,
+            broadcast=False,
         ).send(
             self,
             to=player.sid,
             callback=partial(
                 self.acknowledge_join, room_id=msg.roomid, player_id=msg.playerid
             ),
+        )
+        JoinedMessage(
+            roomid=msg.roomid,
+            playerid=msg.playerid,
+            name=player.name,
+            gamerole=msg.gamerole,
+            broadcast=True,
+        ).send(
+            self, to=room.broadcast_sid,
         )
 
     @expect(JoinFailMessage)
@@ -139,45 +150,60 @@ class GameBroker(Namespace):
                     details="error: 'epoch' is required for non-private messages"
                 )
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
-
-        if msg.visibility == "private":
-            room.update(status="playing", turn=msg.turn)
-            assert player is not None
-            GamestateMessage(
-                board=msg.board,
-                turn=msg.turn,
-                roomid=msg.roomid,
-                playerid=msg.playerid,
-                epoch=msg.epoch,
-            ).send(self, to=player.sid)
-        else:
-            if room.status == "finished":
-                room.update(board=msg.board, turn=None)
-            else:
-                room.update(status="playing", turn=msg.turn)
-            if msg.visibility == "broadcast":
-                r = GamestateMessage(
+        with room.lock(timeout=0.5, sleep=0.02):
+            if msg.finish is not None:
+                logger.info("Game finished")
+                GamestateMessage.from_dict(msg.to_dict()).send(
+                    self, to=room.broadcast_sid
+                )
+                room.update(status="finished")
+            new_status = "finished" if room.status == "finished" else "playing"
+            if msg.visibility == "private":
+                room.update(status=new_status, turn=msg.turn)
+                assert player is not None
+                GamestateMessage(
                     board=msg.board,
                     turn=msg.turn,
                     roomid=msg.roomid,
                     playerid=msg.playerid,
                     epoch=msg.epoch,
-                )
-                logger.debug(
-                    f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
-                )
-                r.send(sio=self, to=room.broadcast_sid)
-            try:
-                state = GameState.get(msg.stateid)
-                if state.room is not None and state.room.id != msg.roomid:
-                    raise InstanceNotFound
-            except InstanceNotFound:
-                GameState.create(
-                    room_id=msg.roomid, epoch=msg.epoch, board=msg.board, turn=msg.turn
-                )
+                ).send(self, to=player.sid)
             else:
-                state.update(epoch=msg.epoch, board=msg.board, turn=msg.turn)
-            room.update(status="playing", board=msg.board, turn=msg.turn)
+                if room.status == "finished":
+                    room.update(board=msg.board, turn=None)
+                else:
+                    room.update(status=new_status, turn=msg.turn)
+                if msg.visibility == "broadcast":
+                    r = GamestateMessage(
+                        board=msg.board,
+                        turn=msg.turn,
+                        roomid=msg.roomid,
+                        playerid=msg.playerid,
+                        epoch=msg.epoch,
+                    )
+                    logger.debug(
+                        f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
+                    )
+                    r.send(sio=self, to=room.broadcast_sid)
+                try:
+                    state = GameState.get(msg.stateid)
+                    if state.room is not None and state.room.id != msg.roomid:
+                        raise InstanceNotFound
+                except InstanceNotFound:
+                    state_args = {
+                        "room_id": msg.roomid,
+                        "epoch": msg.epoch,
+                        "board": msg.board,
+                        "turn": msg.turn,
+                    }
+                    GameState.create(
+                        **{k: v for k, v in state_args.items() if v is None}
+                    )
+                else:
+                    state.update(epoch=msg.epoch, board=msg.board, turn=msg.turn)
+                room.update(
+                    status=new_status, board=msg.board, turn=msg.turn,
+                )
 
     @expect(MoveMessage)
     def on_move(self, sid: PlayerSID, msg: MoveMessage) -> None:
@@ -201,20 +227,6 @@ class GameBroker(Namespace):
                 move=msg.move,
                 stateid=state.id,
             ).send(self, to=room.server_sid)
-
-    @expect(FinishMessage)
-    def on_finish(self, sid: GameServerSID, msg: FinishMessage) -> None:
-        """
-        Server notifies that the game has finished
-        """
-        # TODO: Add validation around server sending back acceptable scores
-        room, _ = get_room_player(sid, msg.roomid, None)
-        logger.info("Game finished")
-        if room.status == "finished":
-            raise GameNotRunning
-        else:
-            FinishedMessage.from_dict(msg.to_dict()).send(self, to=room.broadcast_sid)
-        room.update(status="finished")
 
     @expect(ListMessage)
     def on_list(
@@ -246,5 +258,16 @@ class GameBroker(Namespace):
                 "status": room.status,
                 "players": {player.id: player.name for player in room.players},
                 "turn": room.turn,
+                "states": [
+                    {
+                        "id": state.id,
+                        "timestamp": state.timestamp.isoformat(),
+                        "epoch": state.epoch,
+                        "move": state.move,
+                        "board": state.board,
+                        "turn": state.turn,
+                    }
+                    for state in room.states
+                ],
             },
         )

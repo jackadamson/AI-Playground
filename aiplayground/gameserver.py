@@ -26,7 +26,7 @@ from aiplayground.messages import (
     JoinAcknowledgementMessage,
     GameUpdateMessage,
     PlayerMoveMessage,
-    FinishMessage,
+    Finish,
 )
 from aiplayground.logging import logger
 
@@ -98,11 +98,11 @@ class GameServer(socketio.ClientNamespace):
         """
         with self.lock:
             try:
-                self.game.add_player(msg.playerid)
+                gamerole = self.game.add_player(msg.playerid)
                 # Game is not ready to start
-                JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid).send(
-                    sio=self
-                )
+                JoinSuccessMessage(
+                    playerid=msg.playerid, roomid=msg.roomid, gamerole=gamerole
+                ).send(sio=self)
 
             except (GameFull, ExistingPlayer) as e:
                 logger.warning(f"Player failed to join with error: {e}")
@@ -138,10 +138,9 @@ class GameServer(socketio.ClientNamespace):
                     turn=None,
                     epoch=self.game.movenumber,
                     stateid=msg.stateid,
+                    finish=Finish(normal=True, scores=self.game.score(),),
                 ).send(sio=self)
-                FinishMessage(
-                    normal=True, scores=self.game.score(), roomid=self.room_id
-                ).send(sio=self)
+
                 if Settings.RUN_ONCE:
                     self.disconnect()
                 else:
@@ -150,14 +149,21 @@ class GameServer(socketio.ClientNamespace):
 
             except IllegalMove as e:
                 logger.exception(e)
-                FinishMessage(
-                    normal=False,
+                GameUpdateMessage(
                     roomid=self.room_id,
-                    reason=e.details,
-                    fault=msg.playerid,
-                    scores={
-                        p: (-1 if p == msg.playerid else 1) for p in self.game.players
-                    },
+                    visibility="broadcast",
+                    epoch=self.game.movenumber,
+                    board=self.game.show_board(),
+                    turn=None,
+                    finish=Finish(
+                        normal=False,
+                        reason=e.details,
+                        fault=msg.playerid,
+                        scores={
+                            p: (-1 if p == msg.playerid else 1)
+                            for p in self.game.players
+                        },
+                    ),
                 ).send(sio=self)
 
     def on_fail(self, data):

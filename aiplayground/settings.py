@@ -14,7 +14,7 @@ env.read_env()
 class Settings(BaseSettings):
     ALLOW_GUEST = env.bool("ALLOW_GUEST", default=True)
     LOG_LEVEL = env.str("LOG_LEVEL", default="INFO")
-
+    ALLOW_API_KEYS = True
     # For a player
     # Name for player
     PLAYER_NAME = env.str("ASIMOV_PLAYER_NAME", default="Some Player")

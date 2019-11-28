@@ -24,9 +24,10 @@ def get_room_player(
     :param check_server: Whether to check if the other party has game server permissions
     """
     # TODO: Remove reliance on SID for authorization
-    room = Room.get(roomid)
-    if room is None:
-        raise NoSuchRoom
+    try:
+        room = Room.get(roomid)
+    except InstanceNotFound as e:
+        raise NoSuchRoom from e
     if check_server and sid != room.server_sid:
         raise UnauthorizedGameServer
     if playerid is None:

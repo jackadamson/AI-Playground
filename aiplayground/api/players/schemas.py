@@ -12,7 +12,7 @@ player_schema = Model(
             required=True, description="Player chosen name", example="Some Player"
         ),
         "joined_at": fields.DateTime(required=False),
-        "game_role": fields.String(
+        "gamerole": fields.String(
             required=False,
             description="Role a player has within the game, eg. in Tic Tac Toe 'x' or 'o'",
         ),

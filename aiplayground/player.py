@@ -13,9 +13,9 @@ from aiplayground.messages import (
     GamestateMessage,
     JoinMessage,
     JoinedMessage,
-    FinishedMessage,
     ListMessage,
     MoveMessage,
+    Finish,
 )
 from aiplayground.types import PlayerId, RoomId, RoomName, GameName, PlayerName
 
@@ -61,6 +61,8 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(JoinedMessage)
     def on_joined(self, msg: JoinedMessage):
+        if msg.broadcast:
+            return
         assert self.game_name is not None
         self.player_id = msg.playerid
         self.room_id = msg.roomid
@@ -70,6 +72,9 @@ class PlayerClient(socketio.ClientNamespace):
 
     @expect(GamestateMessage)
     def on_gamestate(self, msg: GamestateMessage):
+        if msg.finish is not None:
+            self.finished(msg.finish)
+            return
         if msg.roomid != self.room_id:
             return
         assert self.player is not None
@@ -83,15 +88,12 @@ class PlayerClient(socketio.ClientNamespace):
                 sio=self
             )
 
-    @expect(FinishedMessage)
-    def on_finished(self, msg: FinishedMessage):
+    def finished(self, finish: Finish):
         assert self.player_id is not None
-        assert msg.scores is not None
-        if msg.roomid != self.room_id:
-            return
-        if msg.normal:
+        assert finish.scores is not None
+        if finish.normal:
             logger.debug("Game finished normally")
-            score = msg.scores[self.player_id]
+            score = finish.scores[self.player_id]
             if score > 0:
                 logger.info("We won :)")
             elif score == 0:
@@ -104,8 +106,8 @@ class PlayerClient(socketio.ClientNamespace):
             else:
                 self.on_connect()
         else:
-            logger.error(f"Game finished with error: {msg.reason}")
-            if msg.fault == self.player_id:
+            logger.error(f"Game finished with error: {finish.reason}")
+            if finish.fault == self.player_id:
                 logger.error("AND IT WAS ALL OUR FAULT D:")
                 if Settings.LEEROY_JENKINS:
                     logger.error("But YOLO I'll try again")

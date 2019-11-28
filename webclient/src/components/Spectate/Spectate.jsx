@@ -8,6 +8,10 @@ import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
+import MobileStepper from '@material-ui/core/MobileStepper';
+import Button from '@material-ui/core/Button';
+import { KeyboardArrowLeft, KeyboardArrowRight } from '@material-ui/icons';
+import history from '../../history';
 import socketio from '../../socketio';
 import Games from '../Games';
 import { successColor, primaryColor, infoColor } from '../../assets/styles/commonStyles';
@@ -18,28 +22,59 @@ const statusColors = { finished: successColor[1], playing: primaryColor[1], lobb
 const getColor = (status) => (status === undefined ? '' : statusColors[status]);
 
 const Spectate = ({ match: { params: { roomId } } }) => {
+  const sortByEpoch = (s) => ([...s].sort((a, b) => (a.epoch - b.epoch)));
   const classes = useStyles();
+  const [epoch, setEpoch] = useState(null);
+  const [states, setStates] = useState([]);
   const [room, setRoom] = useState({
     players: [],
   });
-  const [board, setBoard] = useState(null);
   useEffect(() => {
     axios.get(`/rooms/${roomId}`).then((resp) => {
+      setStates(resp.data.states);
       setRoom(resp.data);
+    }).catch((err) => {
+      if (err.response) {
+        if (err.response.status === 404) {
+          history.push('/lobbies/');
+        }
+      }
     });
   }, [roomId]);
   useEffect(() => {
-    if (room.game) {
-      return;
-    }
-    socketio.on('gamestate', (data) => {
-      setBoard(data.board);
-    });
+    const gameStateCallback = (data) => {
+      console.log(data);
+      setStates((curStates) => (
+        sortByEpoch([...curStates, data])
+      ));
+    };
+    const gsSocket = socketio.on('gamestate', gameStateCallback);
+    const joinedCallback = (data) => {
+      console.log(data);
+      setRoom((currRoom) => ({
+        ...currRoom,
+        players: [...currRoom.players, {
+          gamerole: data.gamerole, id: data.playerid, name: data.name,
+        }],
+      }));
+    };
+    const jnSocket = socketio.on('joined', joinedCallback);
     socketio.emit('spectate', { roomid: roomId }, (_, data) => {
-      setBoard(data.board);
+      if (data.states) {
+        const localStates = sortByEpoch(data.states);
+        setStates(localStates);
+      }
     });
-  }, [roomId, room.game]);
 
+    function cleanup() {
+      gsSocket.off('gamestate', gameStateCallback);
+      jnSocket.off('joined', joinedCallback);
+    }
+
+    return cleanup;
+  }, [roomId, room.game]);
+  const state = epoch === null ? states[states.length - 1] : states[epoch];
+  const board = state ? state.board : null;
   const Game = Games[room.game];
   return (
     <>
@@ -59,6 +94,36 @@ State:
         </span>
         <Container className={classes.mainArea}>
           {board && Game ? <Game board={board} /> : (<Typography variant="body2">Game not started</Typography>)}
+          <MobileStepper
+            className={classes.stepper}
+            variant="text"
+            backButton={(
+              <Button
+                size="small"
+                onClick={() => {
+                  setEpoch(epoch === null ? states.length - 2 : epoch - 1);
+                }}
+                disabled={epoch === 0 || states.length === 0}
+              >
+                <KeyboardArrowLeft />
+                Back
+              </Button>
+            )}
+            nextButton={(
+              <Button
+                size="small"
+                onClick={() => {
+                  setEpoch(epoch === states.length - 2 ? null : epoch + 1);
+                }}
+                disabled={epoch === null || epoch === states.length - 1}
+              >
+                Next
+                <KeyboardArrowRight />
+              </Button>
+            )}
+            steps={states.length}
+            activeStep={epoch === null ? states.length - 1 : epoch}
+          />
         </Container>
       </div>
       <Drawer variant="permanent" anchor="right" className={classes.playerDrawer}>
@@ -68,7 +133,7 @@ State:
             <List>
               {room.players.map((player) => (
                 <ListItem key={player.id}>
-                  <ListItemText primary={player.name} />
+                  <ListItemText primary={player.gamerole ? `${player.name} (${player.gamerole})` : player.name} />
                 </ListItem>
               ))}
             </List>

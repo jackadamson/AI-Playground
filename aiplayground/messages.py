@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Optional, Dict, Callable
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
@@ -28,10 +28,10 @@ class MessageBase(JsonSchemaMixin):
         self._callback = callback
         if to is None:
             logger.debug(f"Sending message {message_name}:\n{self!r}")
-            sio.emit(message_name, asdict(self), callback=self.callback)
+            sio.emit(message_name, self.to_dict(), callback=self.callback)
         else:
             logger.debug(f"Sending message {message_name} to {to!r}:\n{self!r}")
-            sio.emit(message_name, asdict(self), room=to, callback=self.callback)
+            sio.emit(message_name, self.to_dict(), room=to, callback=self.callback)
 
     def callback(self, msgtype=None, *args):
         if msgtype == "fail":
@@ -44,6 +44,23 @@ class MessageBase(JsonSchemaMixin):
             self._callback(*args)
 
 
+@dataclass
+class Finish(JsonSchemaMixin):
+    """
+    :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
+    :param dict|None scores: The scores of the players in the game
+    :param str|None reason: Why the game finished abnormally
+    :param str|None fault: Player tha caused the game to end abnormally
+
+    Field that when present in a game update indicates the game has finished
+    """
+
+    normal: bool
+    scores: Optional[Dict[PlayerId, int]] = None
+    reason: Optional[str] = None
+    fault: Optional[PlayerId] = None
+
+
 # Sent from broker
 @dataclass
 class GamestateMessage(MessageBase):
@@ -53,6 +70,7 @@ class GamestateMessage(MessageBase):
     :param int epoch: Number of state updates that occured before this state update
     :param str playerid|None: Intended recipient of the message
     :param str|None turn: ID of player who's turn it is
+    :param Finish|None finish: Info on the end of the game
 
     Message from broker to players to indicate a change in game state
     """
@@ -60,23 +78,35 @@ class GamestateMessage(MessageBase):
     board: Board
     roomid: RoomId
     epoch: int
-    playerid: Optional[PlayerId]
-    turn: Optional[PlayerId]
+    playerid: Optional[PlayerId] = None
+    turn: Optional[PlayerId] = None
+    finish: Optional[Finish] = None
+
+
+@dataclass
+class PlayerJoinedMessage(MessageBase):
+    """
+    :param str roomid: ID of room that the player joined
+    """
 
 
 @dataclass
 class JoinedMessage(MessageBase):
     """
-    :param str roomid: ID of room that the player joined
     :param str playerid: Player that joined
+    :param str name: Player name
+    :param str roomid: ID of room that the player joined
     :param str|None gamerole: Role the player has in the game, eg. 'white' in chess
+    :param bool broadcast: Whether this message is a broadcast (which does not need processing)
 
     Message from broker to players on successfully joining a room
     """
 
     playerid: PlayerId
+    name: PlayerName
     roomid: RoomId
     gamerole: Optional[GameRole] = None
+    broadcast: bool = False
 
 
 @dataclass
@@ -131,25 +161,6 @@ class JoinAcknowledgementMessage(MessageBase):
 
     roomid: RoomId
     playerid: PlayerId
-
-
-@dataclass
-class FinishedMessage(MessageBase):
-    """
-    :param str roomid: Room that finished the game
-    :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
-    :param dict|None scores: The scores of the players in the game
-    :param str|None reason: Why the game finished abnormally
-    :param str|None fault: Player tha caused the game to end abnormally
-
-    Message from broker to player indicating a game finished
-    """
-
-    roomid: RoomId
-    normal: bool
-    scores: Optional[Dict[PlayerId, int]] = None
-    reason: Optional[str] = None
-    fault: Optional[PlayerId] = None
 
 
 # Sent from server
@@ -208,6 +219,7 @@ class GameUpdateMessage(MessageBase):
     :param str|None stateid: ID of the state used to correlate a move with a resulting state
     :param str|None playerid: Player to send private update to
     :param str|None turn: Player who's turn it is
+    :param str|Finish finish: How the game finished
 
     From gameserver, informing broker that a player failed to join a room
     """
@@ -219,25 +231,7 @@ class GameUpdateMessage(MessageBase):
     stateid: Optional[StateId] = None
     playerid: Optional[PlayerId] = None
     turn: Optional[PlayerId] = None
-
-
-@dataclass
-class FinishMessage(MessageBase):
-    """
-    :param str roomid: Room that finished the game
-    :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
-    :param dict|None scores: The scores of the players in the game
-    :param str|None reason: Why the game finished abnormally
-    :param str|None fault: Player tha caused the game to end abnormally
-
-    Message from game server to broker, or broker to player indicating a game finished
-    """
-
-    roomid: RoomId
-    normal: bool
-    scores: Optional[Dict[PlayerId, int]] = None
-    reason: Optional[str] = None
-    fault: Optional[PlayerId] = None
+    finish: Optional[Finish] = None
 
 
 # Sent from player

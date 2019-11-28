@@ -1,6 +1,9 @@
 import { makeStyles } from '@material-ui/core';
 
 export default makeStyles(() => ({
+  stepper: {
+    position: 'relative',
+  },
   mainArea: {
     width: 'calc(100% - 200px)',
     height: '100%',

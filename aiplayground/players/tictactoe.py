@@ -14,7 +14,7 @@ class TicTacToeRandomPlayer(BasePlayer):
         assert self.board is not None
         logger.debug(self.board)
         if logger.isEnabledFor(logging.DEBUG):
-            sleep(0.5)
+            sleep(1.5)
         available_moves = [
             {"row": row, "col": col}
             for row in range(3)

@@ -12,7 +12,7 @@ class Player(RedormBase):
     id: PlayerId = field(metadata={"unique": True})
     name: PlayerName
     sid: PlayerSID
-    game_role: Optional[GameRole]
+    gamerole: Optional[GameRole]
     joined: bool = field(default=False)
     joined_at: DateTime = field(default_factory=datetime.now)
     user = many_to_one("User", backref="players")

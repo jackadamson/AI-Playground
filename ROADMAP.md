@@ -7,7 +7,6 @@ Also the features are in no order
 - API Pagination
 - Server-side matchmaking system
 - Player-side config of match joining
-- Web UI, timestepping (see past board states)
 - Match State Dee-duplication in Database
 - Match retention config/optimizations (possibly compress old game states rather than delete)
 - Player/Bot Profile

@@ -1,6 +1,7 @@
-from flask_restplus import Namespace, Resource
+from flask_restplus import Namespace, Resource, abort
 from aiplayground.api.rooms.models import Room
 from aiplayground.api.rooms.schemas import room_schema, room_schema_brief
+from redorm import InstanceNotFound
 
 rooms_api = Namespace("Room", description="Game Rooms")
 
@@ -16,4 +17,7 @@ class RoomsView(Resource):
 class RoomView(Resource):
     @rooms_api.marshal_with(room_schema)
     def get(self, room_id):
-        return Room.get(room_id)
+        try:
+            return Room.get(room_id)
+        except InstanceNotFound:
+            abort(404, "Could not find lobby")
