@@ -1,0 +1,23 @@
+version: '3.6'
+services:
+  redis:
+    restart: always
+    image: 'bitnami/redis:latest'
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+  app:
+    restart: always
+    build: ./webclient
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+  api:
+    restart: always
+    build: ./
+    environment:
+      FLASK_ENV: production
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY}"
+      REDIS_URL: redis://redis/
+    depends_on:
+      - redis

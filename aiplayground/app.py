@@ -7,6 +7,6 @@ from flaskplusplus.auth import initialize_users
 from aiplayground.broker import GameBroker
 from aiplayground.api import blueprint
 
-socketio.on_namespace(GameBroker())
 
 app = create_app((blueprint,), Settings(), initializations=(initialize_users,))
+socketio.on_namespace(GameBroker())
