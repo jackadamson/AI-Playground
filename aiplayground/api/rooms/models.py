@@ -28,7 +28,7 @@ class Room(RedormBase):
     turn: Optional[PlayerId] = field(default=None)
     normal_finish: Optional[bool] = field(default=None)
     created_at: DateTime = field(default_factory=datetime.now)
-    players = one_to_many("Player", backref="room", lazy=False)
+    players = one_to_many("Player", backref="room")
     states = one_to_many("GameState", backref="room")
 
     @property
