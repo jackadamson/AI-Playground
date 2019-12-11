@@ -5,9 +5,10 @@ import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import { NavLink } from 'react-router-dom';
 
-const MaterialTableAction = ({
-  action: { base, icon: Icon, tooltip }, data: { id }, size, disabled,
-}) => {
+const MaterialTableAction = (rowData) => {
+  const {
+    action: { base, icon: Icon, tooltip }, data: { id }, size, disabled,
+  } = rowData;
   const button = (
     <NavLink to={`${base}/${id}`}>
       <IconButton

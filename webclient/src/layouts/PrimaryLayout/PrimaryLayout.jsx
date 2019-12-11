@@ -43,7 +43,7 @@ const routes = [
 
 const switchRoutes = (
   <Switch>
-    {routes.map((prop) => (
+    {routes.filter(({ path }) => (!!path)).map((prop) => (
       <Route
         path={prop.path}
         component={prop.component}
