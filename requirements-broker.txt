@@ -1,6 +1,6 @@
 redorm>=0.5.0
 gunicorn
-http://mrfluffybunny.com/static/somelongpathuntilthisisreleased/flaskplusplus-0.1.0.tar.gz
-# git+ssh://git@gitlab.mrfluffybunny.com/asimov/flaskplusplus.git
+#http://mrfluffybunny.com/static/somelongpathuntilthisisreleased/flaskplusplus-0.1.0.tar.gz
+git+ssh://git@gitlab.mrfluffybunny.com/asimov/flaskplusplus.git
 -r requirements.txt
 

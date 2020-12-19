@@ -1,5 +1,4 @@
 from typing import NewType, Union, Dict, Any
-from dataclasses_jsonschema import JsonSchemaMixin, FieldEncoder
 
 PlayerId = NewType("PlayerId", str)
 RoomId = NewType("RoomId", str)
@@ -16,17 +15,3 @@ BroadcastSID = NewType("BroadcastSID", str)
 SpectatorSID = NewType("SpectatorSID", str)
 SioSID = Union[PlayerSID, GameServerSID, BroadcastSID, SpectatorSID]
 RoomDict = Dict[str, Any]
-
-
-class UUIDField(FieldEncoder):
-    @property
-    def json_schema(self):
-        return {
-            "type": "string",
-            "pattern": r"^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$",
-        }
-
-
-JsonSchemaMixin.register_field_encoders(
-    {PlayerId: UUIDField(), RoomId: UUIDField(), StateId: UUIDField()}
-)

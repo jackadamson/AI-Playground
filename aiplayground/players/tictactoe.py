@@ -16,10 +16,7 @@ class TicTacToeRandomPlayer(BasePlayer):
         if logger.isEnabledFor(logging.DEBUG):
             sleep(1.5)
         available_moves = [
-            {"row": row, "col": col}
-            for row in range(3)
-            for col in range(3)
-            if self.board["grid"][row][col] is None
+            {"row": row, "col": col} for row in range(3) for col in range(3) if self.board["grid"][row][col] is None
         ]
         random.choice(available_moves)
         return Move(random.choice(available_moves))

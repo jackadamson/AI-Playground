@@ -6,7 +6,7 @@ import json
 import time
 import requests
 from aiplayground.logging import logger
-from aiplayground.settings import Settings
+from aiplayground.settings import settings
 from aiplayground.players import all_players, BasePlayer
 from aiplayground.utils.expect import expect
 from aiplayground.messages import (
@@ -28,7 +28,7 @@ class PlayerClient(socketio.ClientNamespace):
     player: Optional[BasePlayer] = None
     player_name: PlayerName
 
-    def __init__(self, player_name: PlayerName = Settings.PLAYER_NAME):
+    def __init__(self, player_name: PlayerName = settings.PLAYER_NAME):
         super().__init__()
         self.player_name = player_name
 
@@ -47,9 +47,7 @@ class PlayerClient(socketio.ClientNamespace):
             logger.warning("Received rooms callback after joining a room")
             return
         lobbies = [
-            (k, v["game"], v["name"])
-            for k, v in rooms.items()
-            if v["status"] == "lobby" and v["game"] in all_players
+            (k, v["game"], v["name"]) for k, v in rooms.items() if v["status"] == "lobby" and v["game"] in all_players
         ]
         if not lobbies:
             logger.warning("No verified lobbies found, sleeping for 2s")
@@ -84,9 +82,7 @@ class PlayerClient(socketio.ClientNamespace):
             return
         move = self.player.update(board=msg.board, turn=msg.turn)
         if move is not None:
-            MoveMessage(roomid=self.room_id, playerid=self.player_id, move=move).send(
-                sio=self
-            )
+            MoveMessage(roomid=self.room_id, playerid=self.player_id, move=move).send(sio=self)
 
     def finished(self, finish: Finish):
         assert self.player_id is not None
@@ -101,7 +97,7 @@ class PlayerClient(socketio.ClientNamespace):
             else:
                 logger.info("We lost :(")
 
-            if Settings.RUN_ONCE:
+            if settings.RUN_ONCE:
                 self.disconnect()
             else:
                 self.on_connect()
@@ -109,7 +105,7 @@ class PlayerClient(socketio.ClientNamespace):
             logger.error(f"Game finished with error: {finish.reason}")
             if finish.fault == self.player_id:
                 logger.error("AND IT WAS ALL OUR FAULT D:")
-                if Settings.LEEROY_JENKINS:
+                if settings.LEEROY_JENKINS:
                     logger.error("But YOLO I'll try again")
                     self.on_connect()
                 else:
@@ -123,27 +119,25 @@ class PlayerClient(socketio.ClientNamespace):
 
 
 def main():
-    for i in range(Settings.CONNECTION_RETRIES):
+    for i in range(settings.CONNECTION_RETRIES):
         try:
-            if Settings.EMAIL and Settings.PASSWORD:
+            if settings.EMAIL and settings.PASSWORD:
                 r = requests.post(
-                    Settings.ASIMOV_URL + "/auth/login",
-                    auth=(Settings.EMAIL, Settings.PASSWORD),
+                    settings.ASIMOV_URL + "/auth/login",
+                    auth=(settings.EMAIL, settings.PASSWORD),
                 )
                 token = r.json()["payload"]
                 headers = {"Authorization": f"Bearer {token}"}
             else:
                 headers = {}
-            sio = socketio.Client(reconnection_attempts=Settings.CONNECTION_RETRIES)
+            sio = socketio.Client(reconnection_attempts=settings.CONNECTION_RETRIES)
             player_client = PlayerClient()
             sio.register_namespace(player_client)
-            sio.connect(Settings.ASIMOV_URL, headers=headers)
+            sio.connect(settings.ASIMOV_URL, headers=headers)
             sio.wait()
             break
         except ConnectionError:
-            logger.warning(
-                f"Connection failed (attempt {i + 1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
-            )
+            logger.warning(f"Connection failed (attempt {i + 1} of {settings.CONNECTION_RETRIES}), waiting 2 secs...")
             sleep(2)
 
 

@@ -23,9 +23,7 @@ class ScissorsPaperRockServer(BaseGameServer):
 
     def show_board(self) -> Board:
         return Board(
-            {k: None if self.playing else v for k, v in self.board.items()}
-            if self.board is not None
-            else None
+            {k: None if self.playing else v for k, v in self.board.items()} if self.board is not None else None
         )
 
     def asign_role(self, player_id: PlayerId) -> Optional[GameRole]:
@@ -37,9 +35,7 @@ class ScissorsPaperRockServer(BaseGameServer):
         self.roles[role] = player_id
         return role
 
-    def make_move(
-        self, player_id: PlayerId, player_role: Optional[GameRole], move: Move
-    ):
+    def make_move(self, player_id: PlayerId, player_role: Optional[GameRole], move: Move):
         m: str = move["move"]
         if m not in ["scissors", "paper", "rock"]:
             raise ValueError

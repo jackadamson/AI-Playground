@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+import json
 from typing import Optional, Dict, Callable
 from flaskplusplus import logger
 from aiplayground.exceptions import all_exceptions
@@ -14,16 +14,16 @@ from aiplayground.types import (
     GameName,
     SioSID,
 )
-from dataclasses_jsonschema import JsonSchemaMixin
+from pydantic import BaseModel, PrivateAttr
 
 
-@dataclass
-class MessageBase(JsonSchemaMixin):
-    _callback = None
+class MessageBase(BaseModel):
+    _callback: Optional[Callable] = PrivateAttr()
 
-    def send(
-        self, sio, to: Optional[SioSID] = None, callback: Optional[Callable] = None
-    ):
+    def to_dict(self) -> dict:
+        return json.loads(self.json())
+
+    def send(self, sio, to: Optional[SioSID] = None, callback: Optional[Callable] = None):
         message_name = self.__class__.__name__[:-7].lower()
         self._callback = callback
         if to is None:
@@ -36,16 +36,13 @@ class MessageBase(JsonSchemaMixin):
     def callback(self, msgtype=None, *args):
         if msgtype == "fail":
             error = args[1]
-            raise all_exceptions[error["error"]](
-                f"{error['details']!r},\nReceived in response to: {self!r}"
-            )
+            raise all_exceptions[error["error"]](f"{error['details']!r},\nReceived in response to: {self!r}")
         elif self._callback:
             logger.debug(f"Recv Callback: msgtype={msgtype!r}, args={args!r}")
             self._callback(*args)
 
 
-@dataclass
-class Finish(JsonSchemaMixin):
+class Finish(MessageBase):
     """
     :param bool normal: Whether the game finished normally, such as a player winning, as opposed to due to an error
     :param dict|None scores: The scores of the players in the game
@@ -62,7 +59,6 @@ class Finish(JsonSchemaMixin):
 
 
 # Sent from broker
-@dataclass
 class GamestateMessage(MessageBase):
     """
     :param dict board: New game board
@@ -83,14 +79,12 @@ class GamestateMessage(MessageBase):
     finish: Optional[Finish] = None
 
 
-@dataclass
 class PlayerJoinedMessage(MessageBase):
     """
     :param str roomid: ID of room that the player joined
     """
 
 
-@dataclass
 class JoinedMessage(MessageBase):
     """
     :param str playerid: Player that joined
@@ -109,7 +103,6 @@ class JoinedMessage(MessageBase):
     broadcast: bool = False
 
 
-@dataclass
 class PlayerMoveMessage(MessageBase):
     """
     :param dict move: Move the player is making
@@ -126,7 +119,6 @@ class PlayerMoveMessage(MessageBase):
     stateid: StateId
 
 
-@dataclass
 class RegisterMessage(MessageBase):
     """
     :param str roomid: ID of room that the player wishes to join
@@ -139,7 +131,6 @@ class RegisterMessage(MessageBase):
     roomid: RoomId
 
 
-@dataclass
 class RoomCreatedMessage(MessageBase):
     """
     :param str roomid: ID of the new game room
@@ -150,7 +141,6 @@ class RoomCreatedMessage(MessageBase):
     roomid: RoomId
 
 
-@dataclass
 class JoinAcknowledgementMessage(MessageBase):
     """
     :param str roomid: ID of room that the player joined
@@ -164,7 +154,6 @@ class JoinAcknowledgementMessage(MessageBase):
 
 
 # Sent from server
-@dataclass
 class CreateRoomMessage(MessageBase):
     """
     :param str name: Name of the lobby to create
@@ -179,7 +168,6 @@ class CreateRoomMessage(MessageBase):
     maxplayers: int
 
 
-@dataclass
 class JoinSuccessMessage(MessageBase):
     """
     :param str playerid: Player that successfully joined
@@ -194,7 +182,6 @@ class JoinSuccessMessage(MessageBase):
     gamerole: Optional[GameRole] = None
 
 
-@dataclass
 class JoinFailMessage(MessageBase):
     """
     :param str playerid: Player that failed to join
@@ -209,7 +196,6 @@ class JoinFailMessage(MessageBase):
     reason: Optional[str] = None
 
 
-@dataclass
 class GameUpdateMessage(MessageBase):
     """
     :param str roomid: Room that the player failed to join
@@ -235,7 +221,6 @@ class GameUpdateMessage(MessageBase):
 
 
 # Sent from player
-@dataclass
 class JoinMessage(MessageBase):
     """
     :param str roomid: Room player is joining
@@ -248,7 +233,6 @@ class JoinMessage(MessageBase):
     name: PlayerName
 
 
-@dataclass
 class MoveMessage(MessageBase):
     """
     :param str playerid: Player making a move
@@ -263,7 +247,6 @@ class MoveMessage(MessageBase):
     move: Move
 
 
-@dataclass
 class ListMessage(MessageBase):
     """
     Player requests list of available rooms
@@ -272,7 +255,6 @@ class ListMessage(MessageBase):
     pass
 
 
-@dataclass
 class SpectateMessage(MessageBase):
     """
     :param str roomid: Room to spectate

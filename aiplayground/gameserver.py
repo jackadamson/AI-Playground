@@ -9,7 +9,7 @@ from threading import Lock
 from aiplayground.types import GameName, RoomName, RoomId
 from aiplayground.utils.atomic import AtomicCounter
 from aiplayground.utils.expect import expect
-from aiplayground.settings import Settings
+from aiplayground.settings import settings
 from aiplayground.gameservers import all_games, BaseGameServer
 from aiplayground.exceptions import (
     GameFull,
@@ -47,7 +47,7 @@ class GameServer(socketio.ClientNamespace):
     room_id: Optional[RoomId]
     player_counter: AtomicCounter
 
-    def __init__(self, gamename=Settings.GAME, name=Settings.LOBBY_NAME):
+    def __init__(self, gamename=settings.GAME, name=settings.LOBBY_NAME):
         super().__init__()
         self.game = all_games[gamename]()
         self.game_name = gamename
@@ -57,9 +57,7 @@ class GameServer(socketio.ClientNamespace):
 
     def initialize(self):
         self.player_counter.set(0)
-        CreateRoomMessage(
-            name=self.name, game=self.game_name, maxplayers=self.game.max_players
-        ).send(sio=self)
+        CreateRoomMessage(name=self.name, game=self.game_name, maxplayers=self.game.max_players).send(sio=self)
 
     def on_connect(self):
         with self.lock:
@@ -100,15 +98,11 @@ class GameServer(socketio.ClientNamespace):
             try:
                 gamerole = self.game.add_player(msg.playerid)
                 # Game is not ready to start
-                JoinSuccessMessage(
-                    playerid=msg.playerid, roomid=msg.roomid, gamerole=gamerole
-                ).send(sio=self)
+                JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid, gamerole=gamerole).send(sio=self)
 
             except (GameFull, ExistingPlayer) as e:
                 logger.warning(f"Player failed to join with error: {e}")
-                JoinFailMessage(
-                    playerid=msg.playerid, roomid=msg.roomid, reason=repr(e)
-                ).send(sio=self)
+                JoinFailMessage(playerid=msg.playerid, roomid=msg.roomid, reason=repr(e)).send(sio=self)
 
     @expect(PlayerMoveMessage)
     def on_playermove(self, msg: PlayerMoveMessage):
@@ -138,10 +132,13 @@ class GameServer(socketio.ClientNamespace):
                     turn=None,
                     epoch=self.game.movenumber,
                     stateid=msg.stateid,
-                    finish=Finish(normal=True, scores=self.game.score(),),
+                    finish=Finish(
+                        normal=True,
+                        scores=self.game.score(),
+                    ),
                 ).send(sio=self)
 
-                if Settings.RUN_ONCE:
+                if settings.RUN_ONCE:
                     self.disconnect()
                 else:
                     self.game = all_games[self.game_name]()
@@ -159,10 +156,7 @@ class GameServer(socketio.ClientNamespace):
                         normal=False,
                         reason=e.details,
                         fault=msg.playerid,
-                        scores={
-                            p: (-1 if p == msg.playerid else 1)
-                            for p in self.game.players
-                        },
+                        scores={p: (-1 if p == msg.playerid else 1) for p in self.game.players},
                     ),
                 ).send(sio=self)
 
@@ -171,18 +165,16 @@ class GameServer(socketio.ClientNamespace):
 
 
 def main():
-    for i in range(Settings.CONNECTION_RETRIES):
+    for i in range(settings.CONNECTION_RETRIES):
         try:
-            sio = socketio.Client(reconnection_attempts=Settings.CONNECTION_RETRIES)
+            sio = socketio.Client(reconnection_attempts=settings.CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
-            sio.connect(Settings.ASIMOV_URL)
+            sio.connect(settings.ASIMOV_URL)
             sio.wait()
             break
         except ConnectionError:
-            print(
-                f"Connection failed (attempt {i + 1} of {Settings.CONNECTION_RETRIES}), waiting 2 secs..."
-            )
+            print(f"Connection failed (attempt {i + 1} of {settings.CONNECTION_RETRIES}), waiting 2 secs...")
             sleep(2)
 
 

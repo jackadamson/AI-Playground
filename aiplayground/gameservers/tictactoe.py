@@ -39,17 +39,13 @@ class TicTacToeServer(BaseGameServer):
         self.roles[role] = player_id
         return role
 
-    def make_move(
-        self, player_id: PlayerId, player_role: Optional[GameRole], move: Move
-    ):
+    def make_move(self, player_id: PlayerId, player_role: Optional[GameRole], move: Move):
         logger.debug(f"Making move for role: {player_role}")
         col: int = move["col"]
         row: int = move["row"]
         grid: List[List[Optional[GameRole]]] = self.board["grid"]
         if grid[row][col] is not None:
-            raise IllegalMove(
-                details="Attempted to play in square that is already occupied"
-            )
+            raise IllegalMove(details="Attempted to play in square that is already occupied")
         grid[row][col] = player_role
 
         if (
@@ -78,8 +74,7 @@ class TicTacToeServer(BaseGameServer):
 
     def show_board(self) -> Board:
         board_repr = "\n -+-+-\n ".join(
-            "|".join(" " if cell is None else cell for cell in row)
-            for row in self.board["grid"]
+            "|".join(" " if cell is None else cell for cell in row) for row in self.board["grid"]
         )
         logger.debug(f"Board:\n {board_repr}")
         return self.board

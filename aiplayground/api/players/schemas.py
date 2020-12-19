@@ -8,9 +8,7 @@ player_schema = Model(
             description="UUIDv4 uniquely identifying the player",
             example="36cad58c-3421-4cb3-8773-cc8b0f0e808b",
         ),
-        "name": fields.String(
-            required=True, description="Player chosen name", example="Some Player"
-        ),
+        "name": fields.String(required=True, description="Player chosen name", example="Some Player"),
         "joined_at": fields.DateTime(required=False),
         "gamerole": fields.String(
             required=False,

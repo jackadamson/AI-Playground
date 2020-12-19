@@ -1,7 +1,0 @@
-dataclasses>=0.6
-dataclasses-jsonschema[fast-validation]>=2.11.1
-environs>=6.1.0
-eventlet>=0.25.1
-fastjsonschema>=2.14.1
-python-socketio>=4.3.1
-requests>=2.22.0

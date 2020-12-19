@@ -12,9 +12,7 @@ class AsimovErrorBase(AsimovExceptionBase):
 
 
 class AsimovServerError(AsimovErrorBase):
-    details = (
-        "Base exception for when a gameAsimovExceptionBase server behaves incorrectly"
-    )
+    details = "Base exception for when a gameAsimovExceptionBase server behaves incorrectly"
 
 
 class AsimovPlayerError(AsimovErrorBase):
@@ -74,9 +72,7 @@ class GameNotRunning(AsimovPlayerError):
     Raised by broker or gameserver
     """
 
-    details = (
-        "The game in the specified room has either not started, or is already completed"
-    )
+    details = "The game in the specified room has either not started, or is already completed"
 
 
 class NotPlayersTurn(AsimovPlayerError):
@@ -130,8 +126,4 @@ class InputValidationError(AsimovErrorBase):
 # TODO: Refactor this abomination
 # Creates a dictionary from the string name to the exception of all subclasses of
 # Asimov ExceptionBase
-all_exceptions = {
-    k: v
-    for k, v in globals().items()
-    if isinstance(v, type) and issubclass(v, AsimovExceptionBase)
-}
+all_exceptions = {k: v for k, v in globals().items() if isinstance(v, type) and issubclass(v, AsimovExceptionBase)}

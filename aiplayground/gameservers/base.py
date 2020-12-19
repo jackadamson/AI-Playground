@@ -50,9 +50,7 @@ class BaseGameServer(ABC):
         except ValidationError as e:
             raise IllegalMove(details=e.message) from e
         self.movenumber += 1
-        self.make_move(
-            player_id=player_id, player_role=self.players.get(player_id), move=move
-        )
+        self.make_move(player_id=player_id, player_role=self.players.get(player_id), move=move)
         board = self.show_board()
         assert board is not None
         return board
@@ -69,9 +67,7 @@ class BaseGameServer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def make_move(
-        self, player_id: PlayerId, player_role: Optional[GameRole], move: Move
-    ):
+    def make_move(self, player_id: PlayerId, player_role: Optional[GameRole], move: Move):
         """
         :param player_id: ID of the player moving
         :param player_role: Game assigned role for player

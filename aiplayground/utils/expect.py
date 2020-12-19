@@ -1,6 +1,6 @@
 import json
-from dataclasses_jsonschema import JsonSchemaValidationError
 from functools import wraps
+from pydantic import ValidationError
 from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional, Any
 from flask import request, has_request_context
 from flaskplusplus import logger
@@ -27,15 +27,15 @@ def expect(
                 data = dict()
             m = {k: v for k, v in data.items() if v is not None}
             try:
-                msg = message_type.from_dict(m)
-            except JsonSchemaValidationError as e:
+                msg = message_type.parse_obj(m)
+            except ValidationError as e:
                 logger.debug(f"Receieved invalid data:\n{json.dumps(data, indent=2)}")
-                logger.warning(f"Validation encountered for {f.__name__}: {e.message}")
+                logger.warning(f"Validation encountered for {f.__name__}: {e!r}")
                 return (
                     "fail",
                     {
                         "error": "InputValidationError",
-                        "details": e.message,
+                        "details": e,
                         # "respondingTo": f.__name__[3:],
                     },
                 )

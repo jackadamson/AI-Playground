@@ -11,9 +11,7 @@ from aiplayground.api.rooms import Room
 from aiplayground.api.players import Player
 
 
-def get_room_player(
-    sid: str, roomid: str, playerid: Optional[str], check_server=True
-) -> Tuple[Room, Optional[Player]]:
+def get_room_player(sid: str, roomid: str, playerid: Optional[str], check_server=True) -> Tuple[Room, Optional[Player]]:
     """
     Checks if a server has permission to act for the room as well as whether the room and player
     are correct.

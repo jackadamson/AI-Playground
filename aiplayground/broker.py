@@ -44,18 +44,14 @@ from aiplayground.types import (
 class GameBroker(Namespace):
     def acknowledge_join(self, room_id: RoomId, player_id: PlayerId) -> None:
         room = Room.get(room_id)
-        JoinAcknowledgementMessage(roomid=room_id, playerid=player_id).send(
-            sio=self, to=room.server_sid
-        )
+        JoinAcknowledgementMessage(roomid=room_id, playerid=player_id).send(sio=self, to=room.server_sid)
 
     @expect(CreateRoomMessage)
     def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage) -> None:
         """
         Server requests to create a game room
         """
-        room = Room.create(
-            name=msg.name, game=msg.game, maxplayers=msg.maxplayers, server_sid=sid
-        )
+        room = Room.create(name=msg.name, game=msg.game, maxplayers=msg.maxplayers, server_sid=sid)
         logger.debug(f"Registered Gameserver with room: {room.id}")
         RoomCreatedMessage(roomid=room.id).send(self, to=sid)
 
@@ -81,9 +77,7 @@ class GameBroker(Namespace):
             raise GameAlreadyStarted
         else:
             logger.debug(f"Registering user")
-            RegisterMessage(roomid=msg.roomid, playerid=player_id).send(
-                self, to=room.server_sid
-            )
+            RegisterMessage(roomid=msg.roomid, playerid=player_id).send(self, to=room.server_sid)
 
     @expect(JoinSuccessMessage)
     def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage) -> None:
@@ -103,9 +97,7 @@ class GameBroker(Namespace):
         ).send(
             self,
             to=player.sid,
-            callback=partial(
-                self.acknowledge_join, room_id=msg.roomid, player_id=msg.playerid
-            ),
+            callback=partial(self.acknowledge_join, room_id=msg.roomid, player_id=msg.playerid),
         )
         JoinedMessage(
             roomid=msg.roomid,
@@ -114,7 +106,8 @@ class GameBroker(Namespace):
             gamerole=msg.gamerole,
             broadcast=True,
         ).send(
-            self, to=room.broadcast_sid,
+            self,
+            to=room.broadcast_sid,
         )
 
     @expect(JoinFailMessage)
@@ -137,25 +130,17 @@ class GameBroker(Namespace):
         """
         if msg.visibility == "private":
             if msg.playerid is None:
-                raise InputValidationError(
-                    details="error: 'playerid' must be provided when visibility is private"
-                )
+                raise InputValidationError(details="error: 'playerid' must be provided when visibility is private")
         else:
             if msg.playerid is not None:
-                raise InputValidationError(
-                    details="error: 'playerid' cannot be provided unless visibility is private"
-                )
+                raise InputValidationError(details="error: 'playerid' cannot be provided unless visibility is private")
             if msg.epoch is None:
-                raise InputValidationError(
-                    details="error: 'epoch' is required for non-private messages"
-                )
+                raise InputValidationError(details="error: 'epoch' is required for non-private messages")
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         with room.lock(timeout=0.5, sleep=0.02):
             if msg.finish is not None:
                 logger.info("Game finished")
-                GamestateMessage.from_dict(msg.to_dict()).send(
-                    self, to=room.broadcast_sid
-                )
+                GamestateMessage.parse_obj(msg.to_dict()).send(self, to=room.broadcast_sid)
                 room.update(status="finished")
             new_status = "finished" if room.status == "finished" else "playing"
             if msg.visibility == "private":
@@ -181,9 +166,7 @@ class GameBroker(Namespace):
                         playerid=msg.playerid,
                         epoch=msg.epoch,
                     )
-                    logger.debug(
-                        f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}"
-                    )
+                    logger.debug(f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}")
                     r.send(sio=self, to=room.broadcast_sid)
                 try:
                     state = GameState.get(msg.stateid)
@@ -196,13 +179,13 @@ class GameBroker(Namespace):
                         "board": msg.board,
                         "turn": msg.turn,
                     }
-                    GameState.create(
-                        **{k: v for k, v in state_args.items() if v is None}
-                    )
+                    GameState.create(**{k: v for k, v in state_args.items() if v is None})
                 else:
                     state.update(epoch=msg.epoch, board=msg.board, turn=msg.turn)
                 room.update(
-                    status=new_status, board=msg.board, turn=msg.turn,
+                    status=new_status,
+                    board=msg.board,
+                    turn=msg.turn,
                 )
 
     @expect(MoveMessage)
@@ -210,17 +193,13 @@ class GameBroker(Namespace):
         """
         Player sends a move request
         """
-        room, player = get_room_player(
-            sid, msg.roomid, msg.playerid, check_server=False
-        )
+        room, player = get_room_player(sid, msg.roomid, msg.playerid, check_server=False)
         if room.status != "playing":
             raise GameNotRunning
         elif room.turn != msg.playerid:
             raise NotPlayersTurn
         else:
-            state = GameState.create(
-                player_id=msg.playerid, room=msg.roomid, move=msg.move
-            )
+            state = GameState.create(player_id=msg.playerid, room=msg.roomid, move=msg.move)
             PlayerMoveMessage(
                 roomid=msg.roomid,
                 playerid=msg.playerid,
@@ -229,9 +208,7 @@ class GameBroker(Namespace):
             ).send(self, to=room.server_sid)
 
     @expect(ListMessage)
-    def on_list(
-        self, sid: PlayerSID, msg: ListMessage
-    ) -> Tuple[str, Dict[RoomId, Dict[str, Any]]]:
+    def on_list(self, sid: PlayerSID, msg: ListMessage) -> Tuple[str, Dict[RoomId, Dict[str, Any]]]:
         return (
             "message",
             {

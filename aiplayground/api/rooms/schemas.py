@@ -19,10 +19,11 @@ game_state_schema = Model(
             required=True,
             description="The index of the state within the span of the game",
         ),
-        "move": fields.Raw(
-            required=False, description="The actual move which lead to the state"
+        "move": fields.Raw(required=False, description="The actual move which lead to the state"),
+        "board": fields.Raw(
+            required=False,
+            description="Current game state",
         ),
-        "board": fields.Raw(required=False, description="Current game state",),
         "turn": fields.String(
             required=True,
             description="UUIDv4 of the player who should play next",
@@ -44,15 +45,9 @@ room_schema = Model(
             description="The name of the game room",
             example="Chess Lobby 1",
         ),
-        "game": fields.String(
-            required=True, description="Player chosen name", example="tictactoe"
-        ),
-        "status": fields.String(
-            required=True, description="Current game state", example="playing"
-        ),
-        "board": fields.Raw(
-            required=True, description="Current game state", example="playing"
-        ),
+        "game": fields.String(required=True, description="Player chosen name", example="tictactoe"),
+        "status": fields.String(required=True, description="Current game state", example="playing"),
+        "board": fields.Raw(required=True, description="Current game state", example="playing"),
         "created_at": fields.DateTime(required=True),
         "players": fields.List(fields.Nested(player_schema)),
         "maxplayers": fields.Integer(required=True),
@@ -75,12 +70,8 @@ room_schema_brief = Model(
             description="The name of the game room",
             example="Chess Lobby 1",
         ),
-        "game": fields.String(
-            required=True, description="Player chosen name", example="tictactoe"
-        ),
-        "status": fields.String(
-            required=True, description="Current game state", example="playing"
-        ),
+        "game": fields.String(required=True, description="Player chosen name", example="tictactoe"),
+        "status": fields.String(required=True, description="Current game state", example="playing"),
         "created_at": fields.DateTime(required=True),
         "players": fields.List(fields.Nested(player_schema)),
         "maxplayers": fields.Integer(required=True),
