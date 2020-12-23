@@ -1,22 +1,21 @@
-import socketio
-from socketio.exceptions import ConnectionError
 import json
-from time import sleep
-from typing import Optional
+import asyncio
 from enum import Enum, auto
 from threading import Lock
+from time import sleep
+from typing import Optional
 
-from aiplayground.types import GameName, RoomName, RoomId
-from aiplayground.utils.atomic import AtomicCounter
-from aiplayground.utils.expect import expect
-from aiplayground.settings import settings
-from aiplayground.gameservers import all_games, BaseGameServer
+import socketio
+from socketio.exceptions import ConnectionError
+
 from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,
     GameCompleted,
     IllegalMove,
 )
+from aiplayground.gameservers import all_games, BaseGameServer
+from aiplayground.logging import logger
 from aiplayground.messages import (
     CreateRoomMessage,
     RoomCreatedMessage,
@@ -28,7 +27,10 @@ from aiplayground.messages import (
     PlayerMoveMessage,
     Finish,
 )
-from aiplayground.logging import logger
+from aiplayground.settings import settings
+from aiplayground.types import GameName, RoomName, RoomId
+from aiplayground.utils.atomic import AtomicCounter
+from aiplayground.utils.expect import expect
 
 
 class GameServerState(Enum):
@@ -39,7 +41,7 @@ class GameServerState(Enum):
     FINISHED = auto()
 
 
-class GameServer(socketio.ClientNamespace):
+class GameServer(socketio.AsyncClientNamespace):
     game: BaseGameServer
     game_name: GameName
     name: RoomName
@@ -55,24 +57,24 @@ class GameServer(socketio.ClientNamespace):
         self.player_counter = AtomicCounter()
         self.lock = Lock()
 
-    def initialize(self):
+    async def initialize(self):
         self.player_counter.set(0)
-        CreateRoomMessage(name=self.name, game=self.game_name, maxplayers=self.game.max_players).send(sio=self)
+        await CreateRoomMessage(name=self.name, game=self.game_name, maxplayers=self.game.max_players).send(sio=self)
 
-    def on_connect(self):
+    async def on_connect(self):
         with self.lock:
             # TODO: Handle reconnection properly
             logger.info("Connected")
-            self.initialize()
+            await self.initialize()
 
     @expect(JoinAcknowledgementMessage)
-    def on_joinacknowledgement(self, msg: JoinAcknowledgementMessage):
+    async def on_joinacknowledgement(self, msg: JoinAcknowledgementMessage):
         if self.room_id is None:
             return
         count = self.player_counter.increment_then_get()
         if count == self.game.max_players:
             self.game.start()
-            GameUpdateMessage(
+            await GameUpdateMessage(
                 visibility="broadcast",
                 roomid=self.room_id,
                 board=self.game.show_board(),
@@ -81,16 +83,17 @@ class GameServer(socketio.ClientNamespace):
             ).send(sio=self)
 
     @expect(RoomCreatedMessage)
-    def on_roomcreated(self, msg: RoomCreatedMessage):
+    async def on_roomcreated(self, msg: RoomCreatedMessage):
         """
         Receives confirmation that a roomcreated was created
         """
+        logger.warning("Got created getting lock")
         with self.lock:
-            logger.info("Successfully created room")
+            logger.warning("Successfully created room")
             self.room_id = msg.roomid
 
     @expect(RegisterMessage)
-    def on_register(self, msg: RegisterMessage):
+    async def on_register(self, msg: RegisterMessage):
         """
         Player requests to join a lobby
         """
@@ -98,14 +101,14 @@ class GameServer(socketio.ClientNamespace):
             try:
                 gamerole = self.game.add_player(msg.playerid)
                 # Game is not ready to start
-                JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid, gamerole=gamerole).send(sio=self)
+                await JoinSuccessMessage(playerid=msg.playerid, roomid=msg.roomid, gamerole=gamerole).send(sio=self)
 
             except (GameFull, ExistingPlayer) as e:
                 logger.warning(f"Player failed to join with error: {e}")
-                JoinFailMessage(playerid=msg.playerid, roomid=msg.roomid, reason=repr(e)).send(sio=self)
+                await JoinFailMessage(playerid=msg.playerid, roomid=msg.roomid, reason=repr(e)).send(sio=self)
 
     @expect(PlayerMoveMessage)
-    def on_playermove(self, msg: PlayerMoveMessage):
+    async def on_playermove(self, msg: PlayerMoveMessage):
         """
         Player sends a move
         """
@@ -115,7 +118,7 @@ class GameServer(socketio.ClientNamespace):
                 logger.debug("Starting player move")
                 self.game.move(msg.playerid, msg.move)
                 logger.debug("Finished player move")
-                GameUpdateMessage(
+                await GameUpdateMessage(
                     visibility="broadcast",
                     roomid=msg.roomid,
                     board=self.game.show_board(),
@@ -125,7 +128,7 @@ class GameServer(socketio.ClientNamespace):
                 ).send(sio=self)
             except GameCompleted:
                 self.game.playing = False
-                GameUpdateMessage(
+                await GameUpdateMessage(
                     visibility="broadcast",
                     roomid=msg.roomid,
                     board=self.game.show_board(),
@@ -139,14 +142,14 @@ class GameServer(socketio.ClientNamespace):
                 ).send(sio=self)
 
                 if settings.RUN_ONCE:
-                    self.disconnect()
+                    await self.disconnect()
                 else:
                     self.game = all_games[self.game_name]()
-                    self.initialize()
+                    await self.initialize()
 
             except IllegalMove as e:
                 logger.exception(e)
-                GameUpdateMessage(
+                await GameUpdateMessage(
                     roomid=self.room_id,
                     visibility="broadcast",
                     epoch=self.game.movenumber,
@@ -160,18 +163,18 @@ class GameServer(socketio.ClientNamespace):
                     ),
                 ).send(sio=self)
 
-    def on_fail(self, data):
+    async def on_fail(self, data):
         logger.error("error received:\n" + json.dumps(data, indent=2))
 
 
-def main():
+async def main():
     for i in range(settings.CONNECTION_RETRIES):
         try:
-            sio = socketio.Client(reconnection_attempts=settings.CONNECTION_RETRIES)
+            sio = socketio.AsyncClient(reconnection_attempts=settings.CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
-            sio.connect(settings.ASIMOV_URL)
-            sio.wait()
+            await sio.connect(settings.ASIMOV_URL)
+            await sio.wait()
             break
         except ConnectionError:
             print(f"Connection failed (attempt {i + 1} of {settings.CONNECTION_RETRIES}), waiting 2 secs...")
@@ -179,4 +182,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

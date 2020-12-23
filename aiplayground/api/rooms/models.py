@@ -1,8 +1,10 @@
-from typing import Optional
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
+
 from redorm import RedormBase, one_to_many, many_to_one
 from redorm.types import DateTime
-from datetime import datetime
+
 from aiplayground.types import (
     PlayerId,
     RoomId,
@@ -50,30 +52,3 @@ class GameState(RedormBase):
     board: Optional[Board] = None
     turn: Optional[PlayerId] = None
     timestamp: DateTime = field(default_factory=datetime.now)
-    #
-    # def __init__(self, board=None, **kwargs):
-    #     boardstate_id = BoardState.id_from_state(board)
-    #     # noinspection PyArgumentList
-    #     SQLBase.__init__(self, boardstate_id=boardstate_id, **kwargs)
-    #
-    # def update(self: "GameState", board=None, **kwargs):
-    #     if board is not None:
-    #         boardstate_id = BoardState.id_from_state(board)
-    #         return super().update(self, boardstate_id=boardstate_id, **kwargs)
-    #     else:
-    #         return super().update(self, commit=True, **kwargs)
-
-
-#
-# class BoardState(SQLBase):
-#     __tablename__ = "boardstates"
-#     state: Board = Column(JSONColumn, nullable=False, unique=True, index=True)
-#
-#     @classmethod
-#     def id_from_state(cls, state: Optional[dict]) -> Optional[str]:
-#         if state is None:
-#             return None
-#         try:
-#             return cls.get(state=state).id
-#         except NoResultFound:
-#             return cls.create(state=state).id

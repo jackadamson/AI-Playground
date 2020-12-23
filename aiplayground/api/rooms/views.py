@@ -1,23 +1,25 @@
-from flask_restplus import Namespace, Resource, abort
-from aiplayground.api.rooms.models import Room
-from aiplayground.api.rooms.schemas import room_schema, room_schema_brief
+from typing import List
+
+from fastapi import APIRouter, HTTPException
 from redorm import InstanceNotFound
 
-rooms_api = Namespace("Room", description="Game Rooms")
+from aiplayground.api.rooms.models import Room
+from aiplayground.api.rooms.schemas import RoomSchema, RoomSchemaSummary
+from aiplayground.logging import logger
+
+rooms_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 
-@rooms_api.route("/")
-class RoomsView(Resource):
-    @rooms_api.marshal_with(room_schema_brief, as_list=True)
-    def get(self):
-        return Room.list()
+@rooms_router.get("/", response_model=List[RoomSchemaSummary])
+def list_rooms():
+    return Room.list()
 
 
-@rooms_api.route("/<room_id>")
-class RoomView(Resource):
-    @rooms_api.marshal_with(room_schema)
-    def get(self, room_id):
-        try:
-            return Room.get(room_id)
-        except InstanceNotFound:
-            abort(404, "Could not find lobby")
+@rooms_router.get("/{room_id}", response_model=RoomSchema)
+def get_room(room_id):
+    try:
+        room = Room.get(room_id)
+        logger.debug(room)
+        return room
+    except InstanceNotFound:
+        raise HTTPException(status_code=404, detail="Could not find lobby")

@@ -1,12 +1,10 @@
 from functools import partial
 from typing import Any, Dict, Tuple
 
-from flask_socketio import Namespace
-from flaskplusplus import logger
-from flaskplusplus.utils import optional_jwt_in_request
-from redorm import InstanceNotFound
-from aiplayground.utils.broker import get_room_player
-from aiplayground.utils.expect import expect
+import socketio
+
+from aiplayground.api.players import Player
+from aiplayground.api.rooms import Room, GameState
 from aiplayground.exceptions import (
     GameNotRunning,
     GameAlreadyStarted,
@@ -30,8 +28,6 @@ from aiplayground.messages import (
     JoinAcknowledgementMessage,
     SpectateMessage,
 )
-from aiplayground.api.rooms import Room, GameState
-from aiplayground.api.players import Player
 from aiplayground.types import (
     GameServerSID,
     PlayerSID,
@@ -39,28 +35,36 @@ from aiplayground.types import (
     RoomId,
     PlayerId,
 )
+from aiplayground.utils.broker import get_room_player
+from aiplayground.utils.expect import expect
+from aiplayground.logging import logger
+from redorm import InstanceNotFound
+
+# TODO: Confirm CORS isn't being problematic
+sio = socketio.AsyncServer(async_mode="asgi")
 
 
-class GameBroker(Namespace):
-    def acknowledge_join(self, room_id: RoomId, player_id: PlayerId) -> None:
+class GameBroker(socketio.AsyncNamespace):
+    async def acknowledge_join(self, room_id: RoomId, player_id: PlayerId) -> None:
         room = Room.get(room_id)
-        JoinAcknowledgementMessage(roomid=room_id, playerid=player_id).send(sio=self, to=room.server_sid)
+        await JoinAcknowledgementMessage(roomid=room_id, playerid=player_id).send(sio=self, to=room.server_sid)
 
     @expect(CreateRoomMessage)
-    def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage) -> None:
+    async def on_createroom(self, sid: GameServerSID, msg: CreateRoomMessage) -> None:
         """
         Server requests to create a game room
         """
         room = Room.create(name=msg.name, game=msg.game, maxplayers=msg.maxplayers, server_sid=sid)
         logger.debug(f"Registered Gameserver with room: {room.id}")
-        RoomCreatedMessage(roomid=room.id).send(self, to=sid)
+        await RoomCreatedMessage(roomid=room.id).send(self, to=sid)
 
     @expect(JoinMessage)
-    def on_join(self, sid: PlayerSID, msg: JoinMessage) -> None:
+    async def on_join(self, sid: PlayerSID, msg: JoinMessage) -> None:
         """
         Player requests to join a game room
         """
-        identity = optional_jwt_in_request()
+        # TODO: Fix join ID
+        identity = {"id": "FIXME"}
         player: Player = Player.create(
             name=msg.name,
             room=msg.roomid,
@@ -77,10 +81,10 @@ class GameBroker(Namespace):
             raise GameAlreadyStarted
         else:
             logger.debug(f"Registering user")
-            RegisterMessage(roomid=msg.roomid, playerid=player_id).send(self, to=room.server_sid)
+            await RegisterMessage(roomid=msg.roomid, playerid=player_id).send(self, to=room.server_sid)
 
     @expect(JoinSuccessMessage)
-    def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage) -> None:
+    async def on_joinsuccess(self, sid: GameServerSID, msg: JoinSuccessMessage) -> None:
         """
         Server confirmed a player joining the lobby
         """
@@ -88,7 +92,7 @@ class GameBroker(Namespace):
         assert player is not None
         player.update(joined=True, gamerole=msg.gamerole)
         self.enter_room(player.sid, room.broadcast_sid)
-        JoinedMessage(
+        await JoinedMessage(
             roomid=msg.roomid,
             playerid=msg.playerid,
             name=player.name,
@@ -99,7 +103,7 @@ class GameBroker(Namespace):
             to=player.sid,
             callback=partial(self.acknowledge_join, room_id=msg.roomid, player_id=msg.playerid),
         )
-        JoinedMessage(
+        await JoinedMessage(
             roomid=msg.roomid,
             playerid=msg.playerid,
             name=player.name,
@@ -111,20 +115,20 @@ class GameBroker(Namespace):
         )
 
     @expect(JoinFailMessage)
-    def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage) -> None:
+    async def on_joinfail(self, sid: GameServerSID, msg: JoinFailMessage) -> None:
         """
         Server responds that a player failed to join the lobby
         """
         room, player = get_room_player(sid, msg.roomid, msg.playerid)
         assert player is not None
-        self.emit(
+        await self.emit(
             "fail",
             {"error": "registrationFailed", "reason": msg.reason},
             room=player.sid,
         )
 
     @expect(GameUpdateMessage)
-    def on_gameupdate(self, sid: GameServerSID, msg: GameUpdateMessage) -> None:
+    async def on_gameupdate(self, sid: GameServerSID, msg: GameUpdateMessage) -> None:
         """
         Server notifies of a game state change
         """
@@ -140,13 +144,13 @@ class GameBroker(Namespace):
         with room.lock(timeout=0.5, sleep=0.02):
             if msg.finish is not None:
                 logger.info("Game finished")
-                GamestateMessage.parse_obj(msg.to_dict()).send(self, to=room.broadcast_sid)
+                await GamestateMessage.parse_obj(msg.to_dict()).send(self, to=room.broadcast_sid)
                 room.update(status="finished")
             new_status = "finished" if room.status == "finished" else "playing"
             if msg.visibility == "private":
                 room.update(status=new_status, turn=msg.turn)
                 assert player is not None
-                GamestateMessage(
+                await GamestateMessage(
                     board=msg.board,
                     turn=msg.turn,
                     roomid=msg.roomid,
@@ -167,7 +171,7 @@ class GameBroker(Namespace):
                         epoch=msg.epoch,
                     )
                     logger.debug(f"room.id={room.id}, room.broadcast_sid={room.broadcast_sid}")
-                    r.send(sio=self, to=room.broadcast_sid)
+                    await r.send(sio=self, to=room.broadcast_sid)
                 try:
                     state = GameState.get(msg.stateid)
                     if state.room is not None and state.room.id != msg.roomid:
@@ -189,7 +193,7 @@ class GameBroker(Namespace):
                 )
 
     @expect(MoveMessage)
-    def on_move(self, sid: PlayerSID, msg: MoveMessage) -> None:
+    async def on_move(self, sid: PlayerSID, msg: MoveMessage) -> None:
         """
         Player sends a move request
         """
@@ -200,7 +204,7 @@ class GameBroker(Namespace):
             raise NotPlayersTurn
         else:
             state = GameState.create(player_id=msg.playerid, room=msg.roomid, move=msg.move)
-            PlayerMoveMessage(
+            await PlayerMoveMessage(
                 roomid=msg.roomid,
                 playerid=msg.playerid,
                 move=msg.move,
@@ -208,7 +212,7 @@ class GameBroker(Namespace):
             ).send(self, to=room.server_sid)
 
     @expect(ListMessage)
-    def on_list(self, sid: PlayerSID, msg: ListMessage) -> Tuple[str, Dict[RoomId, Dict[str, Any]]]:
+    async def on_list(self, sid: PlayerSID, msg: ListMessage) -> Tuple[str, Dict[RoomId, Dict[str, Any]]]:
         return (
             "message",
             {
@@ -224,7 +228,7 @@ class GameBroker(Namespace):
         )
 
     @expect(SpectateMessage)
-    def on_spectate(self, sid: SpectatorSID, msg: SpectateMessage) -> Tuple[str, Dict]:
+    async def on_spectate(self, sid: SpectatorSID, msg: SpectateMessage) -> Tuple[str, Dict]:
         room, _ = get_room_player(sid, msg.roomid, None, check_server=False)
         self.enter_room(sid, room.broadcast_sid)
         self.enter_room(sid, room.spectator_sid)
@@ -248,3 +252,10 @@ class GameBroker(Namespace):
                 ],
             },
         )
+
+    def on_connect(self, sid, environ):
+        headers = environ["asgi.scope"]["headers"]
+        logger.error(f"{sid=}, {environ['asgi.scope']['headers']=}")
+
+
+sio.register_namespace(GameBroker())

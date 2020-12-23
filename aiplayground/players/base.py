@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+
 from aiplayground.logging import logger
 from aiplayground.types import Move, PlayerId, GameName, Board, GameRole
 

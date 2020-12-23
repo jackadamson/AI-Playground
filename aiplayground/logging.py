@@ -1,11 +1,8 @@
 from aiplayground.settings import settings
+import logging
 
-try:
-    from flaskplusplus.logging import logger
-except ModuleNotFoundError:
-    import logging
-
-    logger = logging.getLogger(__name__)
-    logger.setLevel(settings.LOG_LEVEL)
-    sh = logging.StreamHandler(settings.LOG_LEVEL)
-    logger.addHandler(sh)
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.LOG_LEVEL)
+sh = logging.StreamHandler()
+sh.setLevel(settings.LOG_LEVEL)
+logger.addHandler(sh)

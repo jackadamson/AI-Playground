@@ -1,8 +1,8 @@
-from typing import Optional, Dict
 from abc import ABC, abstractmethod
+from typing import Optional, Dict
+
 from jsonschema import validate, ValidationError
 
-# from fastjsonschema import validate, JsonSchemaException
 from aiplayground.exceptions import (
     GameFull,
     ExistingPlayer,

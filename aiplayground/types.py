@@ -1,4 +1,6 @@
 from typing import NewType, Union, Dict, Any
+from enum import Enum
+
 
 PlayerId = NewType("PlayerId", str)
 RoomId = NewType("RoomId", str)
@@ -15,3 +17,9 @@ BroadcastSID = NewType("BroadcastSID", str)
 SpectatorSID = NewType("SpectatorSID", str)
 SioSID = Union[PlayerSID, GameServerSID, BroadcastSID, SpectatorSID]
 RoomDict = Dict[str, Any]
+
+
+class GameStatus(str, Enum):
+    lobby = "lobby"
+    playing = "playing"
+    finished = "finished"

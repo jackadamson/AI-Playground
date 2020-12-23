@@ -1,9 +1,8 @@
 import json
 from functools import wraps
 from pydantic import ValidationError
-from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional, Any
-from flask import request, has_request_context
-from flaskplusplus import logger
+from typing import TYPE_CHECKING, Callable, Type, Union, Tuple, Optional, Any, Awaitable
+from aiplayground.logging import logger
 from aiplayground.exceptions import AsimovErrorBase
 from aiplayground.messages import MessageBase
 
@@ -19,10 +18,15 @@ else:
 
 def expect(
     message_type: Type[MessageBase],
-) -> Callable[[Callable], Callable[[SocketioType], Optional[Tuple]]]:
-    def decorator(f: Callable[..., None]):
+) -> Callable[[Callable[..., Awaitable]], Callable[[SocketioType, str, dict], Awaitable[Optional[Tuple]]]]:
+    def decorator(f: Callable[..., Awaitable]):
         @wraps(f)
-        def wrapper(self: SocketioType, data: dict = None):
+        async def wrapper(sio: SocketioType, *args):
+            if len(args) == 1:
+                [data] = args
+                sid = None
+            else:
+                [sid, data] = args
             if data is None:
                 data = dict()
             m = {k: v for k, v in data.items() if v is not None}
@@ -35,17 +39,15 @@ def expect(
                     "fail",
                     {
                         "error": "InputValidationError",
-                        "details": e,
-                        # "respondingTo": f.__name__[3:],
+                        "details": e.json(),
                     },
                 )
 
             try:
-                logger.debug(f"Receieved message:\n{msg!r}")
-                if has_request_context():
-                    return f(self, sid=request.sid, msg=msg)
+                if sid is None:
+                    await f(sio, msg=msg)
                 else:
-                    return f(self, msg=msg)
+                    return await f(sio, sid=sid, msg=msg)
 
             except AsimovErrorBase as e:
                 logger.exception(e)
@@ -54,7 +56,6 @@ def expect(
                     {
                         "error": e.__class__.__name__,
                         "details": e.details,
-                        # "respondingTo": f.__name__[3:],
                     },
                 )
 

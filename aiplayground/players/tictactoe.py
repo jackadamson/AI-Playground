@@ -1,9 +1,10 @@
-import random
 import logging
+import random
 from time import sleep
+
 from aiplayground.logging import logger
-from aiplayground.types import GameName, Move
 from aiplayground.players.base import BasePlayer
+from aiplayground.types import GameName, Move
 
 
 class TicTacToeRandomPlayer(BasePlayer):

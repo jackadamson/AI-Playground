@@ -1,11 +1,13 @@
-from flask_restplus import Namespace, Resource
+from typing import List
+
+from fastapi import APIRouter
+
 from aiplayground.api.players.models import Player
+from aiplayground.api.players.schemas import PlayerSchema
 
-players_api = Namespace("Player", description="Game Players")
+players_router = APIRouter(prefix="/players")
 
 
-@players_api.route("/")
-class PlayersView(Resource):
-    @players_api.marshal_with(Player.schema, as_list=True)
-    def get(self):
-        return Player.list()
+@players_router.get("/", tags=["Players"], response_model=List[PlayerSchema])
+def list_players():
+    return Player.list()

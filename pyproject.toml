@@ -15,11 +15,16 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = ">= 3.6"
-eventlet = "^0.25.1"
 python-socketio = "^4.3.1"
 requests = "^2.22.0"
 pydantic = { version = "^1.7.3", python = ">=3.6" }
-
+python-multipart = {version = "^0.0.5", optional = true }
+redorm = { version = ">=0.5.0", optional = true }
+fastapi = { version = ">=0.63.0", optional = true }
+uvicorn = { version = ">=0.13.2", optional = true, extras = ["standard"] }
+passlib = {version = "^1.7.4", optional = true, extras = ["bcrypt"]}
+python-jose = {version = "^3.2.0", optional = true, extras = ["cryptography"]}
+aiohttp = "^3.7.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.4"
@@ -27,7 +32,10 @@ mypy = "^0.790"
 Sphinx = "^3.3.1"
 sphinx-rtd-theme = "^0.5.0"
 
+[tool.poetry.extras]
+broker = ["redorm", "uvicorn", "fastapi", "python-multipart", "passlib", "python-jose"]
+
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py36']
 include = '\.pyi?$'

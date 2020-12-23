@@ -1,9 +1,9 @@
 from typing import Dict, Optional
 
-from aiplayground.types import GameRole, PlayerId, Board, Move
-from aiplayground.logging import logger
-from aiplayground.gameservers.base import BaseGameServer
 from aiplayground.exceptions import GameCompleted
+from aiplayground.gameservers.base import BaseGameServer
+from aiplayground.logging import logger
+from aiplayground.types import GameRole, PlayerId, Board, Move
 
 player_a = GameRole("a")
 player_b = GameRole("b")

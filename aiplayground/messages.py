@@ -1,6 +1,8 @@
 import json
 from typing import Optional, Dict, Callable
-from flaskplusplus import logger
+
+from pydantic import BaseModel, PrivateAttr
+
 from aiplayground.exceptions import all_exceptions
 from aiplayground.types import (
     PlayerId,
@@ -14,7 +16,7 @@ from aiplayground.types import (
     GameName,
     SioSID,
 )
-from pydantic import BaseModel, PrivateAttr
+from aiplayground.logging import logger
 
 
 class MessageBase(BaseModel):
@@ -23,23 +25,23 @@ class MessageBase(BaseModel):
     def to_dict(self) -> dict:
         return json.loads(self.json())
 
-    def send(self, sio, to: Optional[SioSID] = None, callback: Optional[Callable] = None):
+    async def send(self, sio, to: Optional[SioSID] = None, callback: Optional[Callable] = None):
         message_name = self.__class__.__name__[:-7].lower()
         self._callback = callback
         if to is None:
             logger.debug(f"Sending message {message_name}:\n{self!r}")
-            sio.emit(message_name, self.to_dict(), callback=self.callback)
+            await sio.emit(message_name, self.to_dict(), callback=self.callback)
         else:
             logger.debug(f"Sending message {message_name} to {to!r}:\n{self!r}")
-            sio.emit(message_name, self.to_dict(), room=to, callback=self.callback)
+            await sio.emit(message_name, self.to_dict(), room=to, callback=self.callback)
 
-    def callback(self, msgtype=None, *args):
+    async def callback(self, msgtype=None, *args):
         if msgtype == "fail":
-            error = args[1]
+            error = args[0]
             raise all_exceptions[error["error"]](f"{error['details']!r},\nReceived in response to: {self!r}")
         elif self._callback:
             logger.debug(f"Recv Callback: msgtype={msgtype!r}, args={args!r}")
-            self._callback(*args)
+            await self._callback(*args)
 
 
 class Finish(MessageBase):

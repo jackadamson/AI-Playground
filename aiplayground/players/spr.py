@@ -1,6 +1,7 @@
+import random
+
 from aiplayground.players.base import BasePlayer
 from aiplayground.types import GameName, Move
-import random
 
 
 class ScissorsPaperRockPlayer(BasePlayer):

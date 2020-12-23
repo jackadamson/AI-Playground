@@ -1,20 +1,21 @@
-from flask_restplus import Model, fields
+from datetime import datetime
+from typing import Optional
 
-player_schema = Model(
-    "Player",
-    {
-        "id": fields.String(
-            required=True,
-            description="UUIDv4 uniquely identifying the player",
-            example="36cad58c-3421-4cb3-8773-cc8b0f0e808b",
-        ),
-        "name": fields.String(required=True, description="Player chosen name", example="Some Player"),
-        "joined_at": fields.DateTime(required=False),
-        "gamerole": fields.String(
-            required=False,
-            description="Role a player has within the game, eg. in Tic Tac Toe 'x' or 'o'",
-        ),
-    },
-)
+from pydantic import BaseModel, Field
 
-all_schemas = [player_schema]
+from aiplayground.types import PlayerId, PlayerName, GameRole
+
+
+class PlayerSchema(BaseModel):
+    id: PlayerId = Field(..., description="Player unique identifier")
+    name: PlayerName = Field(..., description="Human readable unique name")
+    gamerole: Optional[GameRole] = Field(
+        None, description="Role within a particular game, eg. in Tic Tac Toe 'x' or 'o'"
+    )
+    joined_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
+all_schemas = [PlayerSchema]
