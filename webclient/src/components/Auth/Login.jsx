@@ -13,8 +13,8 @@ const Login = ({ authState, setAuthState, setToken }) => {
   const classes = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const login = (body) => {
-    axios.post('/auth/login', body)
+  const login = (url, body) => {
+    axios.post(url, body)
       .then((resp) => {
         if (resp.data.success) {
           setToken(resp.data.payload);
@@ -25,11 +25,11 @@ const Login = ({ authState, setAuthState, setToken }) => {
       });
   };
   const doGuestLogin = () => {
-    login({ guest: true });
+    login('/auth/guest', {});
   };
   const doLogin = (e) => {
     e.preventDefault();
-    login({ email, password });
+    login('/auth/login', { email, password });
     return false;
   };
   return (

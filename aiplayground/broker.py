@@ -5,6 +5,7 @@ import socketio
 
 from aiplayground.api.players import Player
 from aiplayground.api.rooms import Room, GameState
+from aiplayground.settings import settings
 from aiplayground.exceptions import (
     GameNotRunning,
     GameAlreadyStarted,
@@ -41,7 +42,14 @@ from aiplayground.logging import logger
 from redorm import InstanceNotFound
 
 # TODO: Confirm CORS isn't being problematic
-sio = socketio.AsyncServer(async_mode="asgi")
+if settings.SOCKETIO_REDIS_URL is None:
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+else:
+    logger.info("Creating Kombu Manager")
+    sio_manager = socketio.KombuManager(settings.SOCKETIO_REDIS_URL)
+    logger.info("Creating Socketio Server")
+    sio = socketio.AsyncServer(async_mode="asgi", client_manager=sio_manager, cors_allowed_origins="*")
+    logger.info("Created Socketio Server")
 
 
 class GameBroker(socketio.AsyncNamespace):

@@ -1,4 +1,3 @@
 *
-!requirements.txt
-!requirements-broker.txt
+!pyproject.toml
 !aiplayground

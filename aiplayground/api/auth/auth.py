@@ -4,8 +4,7 @@ from jose import JWTError, jwt
 
 from aiplayground.settings import settings
 
-# TODO: Fix URL when moving api to api
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_claims(token: str = Depends(oauth2_scheme)):

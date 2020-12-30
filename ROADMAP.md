@@ -3,6 +3,7 @@
 All features listed below are nice to haves, but may or may not come to fruition  
 Also the features are in no order
 
+- Redorm Async
 - User API Key creation / management
 - API Pagination
 - Server-side matchmaking system

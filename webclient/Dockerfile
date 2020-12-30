@@ -1,17 +1,15 @@
 # base image
-FROM node:12.2.0-alpine as build
+FROM node:14 as build
 
 # set working directory
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-# install and cache app dependencies
-COPY package.json /app/package.json
+
+COPY package.json ./
+COPY yarn.lock ./
 RUN yarn install --silent
 COPY . /app
-RUN npm run build
-
-CMD ["npm", "start"]
-
+RUN yarn run build
 
 # production environment
 FROM nginx:1.16.0-alpine

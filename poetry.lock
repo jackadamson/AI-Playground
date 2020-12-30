@@ -27,6 +27,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "amqp"
+version = "5.0.2"
+description = "Low-level AMQP client for Python (fork of amqplib)."
+category = "main"
+optional = true
+python-versions = ">=3.6"
+
+[package.dependencies]
+vine = "5.0.0"
+
+[[package]]
 name = "async-timeout"
 version = "3.0.1"
 description = "Timeout context manager for asyncio programs"
@@ -194,7 +205,7 @@ six = "*"
 
 [[package]]
 name = "environs"
-version = "9.2.0"
+version = "9.3.0"
 description = "simplified environment variable parsing"
 category = "main"
 optional = true
@@ -205,9 +216,9 @@ marshmallow = ">=2.7.0"
 python-dotenv = "*"
 
 [package.extras]
-dev = ["pytest", "dj-database-url", "dj-email-url", "django-cache-url", "flake8 (==3.8.4)", "flake8-bugbear (==20.1.4)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)", "tox"]
+dev = ["pytest", "dj-database-url", "dj-email-url", "django-cache-url", "flake8 (==3.8.4)", "flake8-bugbear (==20.11.1)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)", "tox"]
 django = ["dj-database-url", "dj-email-url", "django-cache-url"]
-lint = ["flake8 (==3.8.4)", "flake8-bugbear (==20.1.4)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)"]
+lint = ["flake8 (==3.8.4)", "flake8-bugbear (==20.11.1)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)"]
 tests = ["pytest", "dj-database-url", "dj-email-url", "django-cache-url"]
 
 [[package]]
@@ -351,6 +362,42 @@ format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors
 format_nongpl = ["idna", "jsonpointer (>1.13)", "webcolors", "rfc3986-validator (>0.1.0)", "rfc3339-validator"]
 
 [[package]]
+name = "kombu"
+version = "5.0.2"
+description = "Messaging library for Python."
+category = "main"
+optional = true
+python-versions = ">=3.6"
+
+[package.dependencies]
+amqp = ">=5.0.0,<6.0.0"
+importlib-metadata = {version = ">=0.18", markers = "python_version < \"3.8\""}
+
+[package.extras]
+azureservicebus = ["azure-servicebus (>=0.21.1)"]
+azurestoragequeues = ["azure-storage-queue"]
+consul = ["python-consul (>=0.6.0)"]
+librabbitmq = ["librabbitmq (>=1.5.2)"]
+mongodb = ["pymongo (>=3.3.0)"]
+msgpack = ["msgpack"]
+pyro = ["pyro4"]
+qpid = ["qpid-python (>=0.26)", "qpid-tools (>=0.26)"]
+redis = ["redis (>=3.3.11)"]
+slmq = ["softlayer-messaging (>=1.0.3)"]
+sqlalchemy = ["sqlalchemy"]
+sqs = ["boto3 (>=1.4.4)", "pycurl (==7.43.0.2)"]
+yaml = ["PyYAML (>=3.10)"]
+zookeeper = ["kazoo (>=1.3.1)"]
+
+[[package]]
+name = "lupa"
+version = "1.9"
+description = "Python wrapper around Lua and LuaJIT"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "markupsafe"
 version = "1.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -488,6 +535,7 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 dataclasses = {version = ">=0.6", markers = "python_version < \"3.7\""}
+python-dotenv = {version = ">=0.10.4", optional = true, markers = "extra == \"dotenv\""}
 
 [package.extras]
 dotenv = ["python-dotenv (>=0.10.4)"]
@@ -551,7 +599,7 @@ name = "python-dotenv"
 version = "0.15.0"
 description = "Add .env support to your django/flask apps in development and deployments"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.extras]
@@ -621,7 +669,7 @@ client = ["requests (>=2.21.0)", "websocket-client (>=0.54.0)"]
 
 [[package]]
 name = "pytz"
-version = "2020.4"
+version = "2020.5"
 description = "World timezone definitions, modern and historical"
 category = "dev"
 optional = false
@@ -715,7 +763,7 @@ python-versions = "*"
 
 [[package]]
 name = "sphinx"
-version = "3.4.0"
+version = "3.4.1"
 description = "Python documentation generator"
 category = "dev"
 optional = false
@@ -870,7 +918,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
 name = "uvicorn"
-version = "0.13.2"
+version = "0.13.3"
 description = "The lightning-fast ASGI server."
 category = "main"
 optional = true
@@ -898,6 +946,14 @@ description = "Fast implementation of asyncio event loop on top of libuv"
 category = "main"
 optional = true
 python-versions = "*"
+
+[[package]]
+name = "vine"
+version = "5.0.0"
+description = "Promises, promises, promises."
+category = "main"
+optional = true
+python-versions = ">=3.6"
 
 [[package]]
 name = "watchgod"
@@ -941,12 +997,12 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [extras]
-broker = ["redorm", "uvicorn", "fastapi", "python-multipart", "passlib", "python-jose"]
+broker = ["redorm", "uvicorn", "fastapi", "python-multipart", "passlib", "python-jose", "kombu"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">= 3.6"
-content-hash = "8922b52ecce6a9d2fe6127470438990eeb5dc8773811c9b3ec6255f6c336d41b"
+content-hash = "9243ddb48c04cbe157064f9ec064a1b1af59ef0ea18d033d570c0d884c406d64"
 
 [metadata.files]
 aiohttp = [
@@ -991,6 +1047,10 @@ aiohttp = [
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
+]
+amqp = [
+    {file = "amqp-5.0.2-py3-none-any.whl", hash = "sha256:5b9062d5c0812335c75434bf17ce33d7a20ecfedaa0733faec7379868eb4068a"},
+    {file = "amqp-5.0.2.tar.gz", hash = "sha256:fcd5b3baeeb7fc19b3486ff6d10543099d40ae1f5c9196eae695d1cde1b2f784"},
 ]
 async-timeout = [
     {file = "async-timeout-3.0.1.tar.gz", hash = "sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f"},
@@ -1103,8 +1163,8 @@ ecdsa = [
     {file = "ecdsa-0.14.1.tar.gz", hash = "sha256:64c613005f13efec6541bb0a33290d0d03c27abab5f15fbab20fb0ee162bdd8e"},
 ]
 environs = [
-    {file = "environs-9.2.0-py2.py3-none-any.whl", hash = "sha256:10dca340bff9c912e99d237905909390365e32723c2785a9f3afa6ef426c53bc"},
-    {file = "environs-9.2.0.tar.gz", hash = "sha256:36081033ab34a725c2414f48ee7ec7f7c57e498d8c9255d61fbc7f2d4bf60865"},
+    {file = "environs-9.3.0-py2.py3-none-any.whl", hash = "sha256:dc279947d8ce83df334031f648aa8fe4bbba12c1e3072b2eecce2ee2be8ada21"},
+    {file = "environs-9.3.0.tar.gz", hash = "sha256:181fe8be5bce2512100de588b9f5ac01d8d5a867069a179efd4f3b7721036a0a"},
 ]
 fakeredis = [
     {file = "fakeredis-1.4.5-py3-none-any.whl", hash = "sha256:2c6041cf0225889bc403f3949838b2c53470a95a9e2d4272422937786f5f8f73"},
@@ -1157,6 +1217,39 @@ jinja2 = [
 jsonschema = [
     {file = "jsonschema-3.2.0-py2.py3-none-any.whl", hash = "sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163"},
     {file = "jsonschema-3.2.0.tar.gz", hash = "sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a"},
+]
+kombu = [
+    {file = "kombu-5.0.2-py2.py3-none-any.whl", hash = "sha256:6dc509178ac4269b0e66ab4881f70a2035c33d3a622e20585f965986a5182006"},
+    {file = "kombu-5.0.2.tar.gz", hash = "sha256:f4965fba0a4718d47d470beeb5d6446e3357a62402b16c510b6a2f251e05ac3c"},
+]
+lupa = [
+    {file = "lupa-1.9-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:8434fdda16d101c458570d21baf9cd064304b515ed4ef9569949222ba04c3e37"},
+    {file = "lupa-1.9-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:9823322e60b0d9695754e28f5a17323d111d6951933e958cfe72df9523a39e94"},
+    {file = "lupa-1.9-cp27-cp27m-win32.whl", hash = "sha256:a690b0bafb7e50dd8ba14a06065059b11f5c8e5961564d5d45de2d9b4a9972b1"},
+    {file = "lupa-1.9-cp27-cp27m-win_amd64.whl", hash = "sha256:6d65bdc251cd12b85487a1790ca1b282288be84555fe11fbe8b4357ae64708f5"},
+    {file = "lupa-1.9-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:ba879849832b87c18dbc471bffc62ff3393b2034a3b103348d620646575f448a"},
+    {file = "lupa-1.9-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:4badf4180f8fd28e032e8716422b7a0117879569e694b5e2e803a7e39fa85213"},
+    {file = "lupa-1.9-cp34-cp34m-manylinux1_i686.whl", hash = "sha256:ac7585125af7d7214e1f9dbdda965d7455c5065f71be20374c7900e01c74c05f"},
+    {file = "lupa-1.9-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:517b96b23b4ce19feb54ee93d8c3b94f601a3d46cd1d570ecc5137fc7b9cb68c"},
+    {file = "lupa-1.9-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:632e7a101c288e05b823c2bae71ac69e0253e7f4120bc39b5dc1fcaf5daba0fb"},
+    {file = "lupa-1.9-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:42fcd8f7b33b84abce90c57aaeb80d9a2ba3c3fdb4cde2fac1c8f9e4eb00d581"},
+    {file = "lupa-1.9-cp35-cp35m-win32.whl", hash = "sha256:d3cf15d0c1126373535452bdeb71b016fe970d7e5ee2bc0381df7bd35f99c820"},
+    {file = "lupa-1.9-cp35-cp35m-win_amd64.whl", hash = "sha256:49afbeaf90c758512d3c0dea48ac0ecfa460974690cf1af58b95845e6b607c4b"},
+    {file = "lupa-1.9-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:abb357c35ad1c1b78b140c8cf1fd678bcaa04bab275c6d55e47a07717138e551"},
+    {file = "lupa-1.9-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:9ee2aa3e1e852a2917c5869e8ab69d725407a218d14c4c0c98f4b04b3b2a73a7"},
+    {file = "lupa-1.9-cp36-cp36m-win32.whl", hash = "sha256:d497f4727060a1daf8603e86cb731f587c38ab9a3451cd3c9c70f27859cbd3bd"},
+    {file = "lupa-1.9-cp36-cp36m-win_amd64.whl", hash = "sha256:a7d7761b007fbf8b524291ac42bccc32b072102e7f7e547783a5a5ded66a0c39"},
+    {file = "lupa-1.9-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:acaecd88ce6b708fbaf20b76b4d35ecb2817159f8a939b0a73d2aa840dfef850"},
+    {file = "lupa-1.9-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:c57cda6ba3dc55ddd8b6c566c4f315d6152307aee23f212aa06c5e653cde4f13"},
+    {file = "lupa-1.9-cp37-cp37m-win32.whl", hash = "sha256:fe1db400b471a0854fe364b63d7836973ee0d897a76628340d1721b6b4b89ddc"},
+    {file = "lupa-1.9-cp37-cp37m-win_amd64.whl", hash = "sha256:42285855c022b36ed3f0c5d19d0ef27b1648e0683838cddaf9191acad4d6616c"},
+    {file = "lupa-1.9-cp38-cp38-manylinux1_i686.whl", hash = "sha256:7619fbd85d9ece1d48fb72bb7389e98d878621d2da0b7622c99066671f294b65"},
+    {file = "lupa-1.9-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:2551ae82ea0f90383fb153ecd29a1a166e2552e10b7a712ff047cad88062ad37"},
+    {file = "lupa-1.9-cp38-cp38-win32.whl", hash = "sha256:162f6793b2ad40d25710b9998bce2eeb3938efbb4dbad49fb8c5082d214237b3"},
+    {file = "lupa-1.9-cp38-cp38-win_amd64.whl", hash = "sha256:09d6c45eb3b9407588c5a168e3371b629e75c5822050e9feff393601709bd0d7"},
+    {file = "lupa-1.9-cp39-cp39-manylinux1_i686.whl", hash = "sha256:5e08a97a4ae46592f1fd04f2f97d9fdeb6a34dbcdc0a049e1ca5929e6902c558"},
+    {file = "lupa-1.9-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:7df1f565b92f124e45093dde8d262489a67f40eddd7a65035e6bc3b982be234f"},
+    {file = "lupa-1.9.tar.gz", hash = "sha256:a3e11d806ca02cf72e490ec1974f8b96a14a1091895c9dccebe0b8d52dd82e8e"},
 ]
 markupsafe = [
     {file = "MarkupSafe-1.1.1-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161"},
@@ -1358,8 +1451,8 @@ python-socketio = [
     {file = "python_socketio-4.6.1-py2.py3-none-any.whl", hash = "sha256:5a21da53fdbdc6bb6c8071f40e13d100e0b279ad997681c2492478e06f370523"},
 ]
 pytz = [
-    {file = "pytz-2020.4-py2.py3-none-any.whl", hash = "sha256:5c55e189b682d420be27c6995ba6edce0c0a77dd67bfbe2ae6607134d5851ffd"},
-    {file = "pytz-2020.4.tar.gz", hash = "sha256:3e6b7dd2d1e0a59084bcee14a17af60c5c562cdc16d828e8eba2e683d3a7e268"},
+    {file = "pytz-2020.5-py2.py3-none-any.whl", hash = "sha256:16962c5fb8db4a8f63a26646d8886e9d769b6c511543557bc84e9569fb9a9cb4"},
+    {file = "pytz-2020.5.tar.gz", hash = "sha256:180befebb1927b16f6b57101720075a984c019ac16b1b7575673bea42c6c3da5"},
 ]
 pyyaml = [
     {file = "PyYAML-5.3.1-cp27-cp27m-win32.whl", hash = "sha256:74809a57b329d6cc0fdccee6318f44b9b8649961fa73144a98735b0aaf029f1f"},
@@ -1403,8 +1496,8 @@ sortedcontainers = [
     {file = "sortedcontainers-2.3.0.tar.gz", hash = "sha256:59cc937650cf60d677c16775597c89a960658a09cf7c1a668f86e1e4464b10a1"},
 ]
 sphinx = [
-    {file = "Sphinx-3.4.0-py3-none-any.whl", hash = "sha256:77c801947eb86457822e01eadd5c2e2de020db0201f1f9fc98b0927980b6d212"},
-    {file = "Sphinx-3.4.0.tar.gz", hash = "sha256:4dcde313801f23ea4789ac31e5405e240cb758b5d375804807f2f3cc3c396bfa"},
+    {file = "Sphinx-3.4.1-py3-none-any.whl", hash = "sha256:aeef652b14629431c82d3fe994ce39ead65b3fe87cf41b9a3714168ff8b83376"},
+    {file = "Sphinx-3.4.1.tar.gz", hash = "sha256:e450cb205ff8924611085183bf1353da26802ae73d9251a8fcdf220a8f8712ef"},
 ]
 sphinx-rtd-theme = [
     {file = "sphinx_rtd_theme-0.5.0-py2.py3-none-any.whl", hash = "sha256:373413d0f82425aaa28fb288009bf0d0964711d347763af2f1b65cafcb028c82"},
@@ -1480,8 +1573,8 @@ urllib3 = [
     {file = "urllib3-1.22.tar.gz", hash = "sha256:cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"},
 ]
 uvicorn = [
-    {file = "uvicorn-0.13.2-py3-none-any.whl", hash = "sha256:6707fa7f4dbd86fd6982a2d4ecdaad2704e4514d23a1e4278104311288b04691"},
-    {file = "uvicorn-0.13.2.tar.gz", hash = "sha256:d19ca083bebd212843e01f689900e5c637a292c63bb336c7f0735a99300a5f38"},
+    {file = "uvicorn-0.13.3-py3-none-any.whl", hash = "sha256:1079c50a06f6338095b4f203e7861dbff318dde5f22f3a324fc6e94c7654164c"},
+    {file = "uvicorn-0.13.3.tar.gz", hash = "sha256:ef1e0bb5f7941c6fe324e06443ddac0331e1632a776175f87891c7bd02694355"},
 ]
 uvloop = [
     {file = "uvloop-0.14.0-cp35-cp35m-macosx_10_11_x86_64.whl", hash = "sha256:08b109f0213af392150e2fe6f81d33261bb5ce968a288eb698aad4f46eb711bd"},
@@ -1493,6 +1586,10 @@ uvloop = [
     {file = "uvloop-0.14.0-cp38-cp38-macosx_10_11_x86_64.whl", hash = "sha256:bcac356d62edd330080aed082e78d4b580ff260a677508718f88016333e2c9c5"},
     {file = "uvloop-0.14.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:4315d2ec3ca393dd5bc0b0089d23101276778c304d42faff5dc4579cb6caef09"},
     {file = "uvloop-0.14.0.tar.gz", hash = "sha256:123ac9c0c7dd71464f58f1b4ee0bbd81285d96cdda8bc3519281b8973e3a461e"},
+]
+vine = [
+    {file = "vine-5.0.0-py2.py3-none-any.whl", hash = "sha256:4c9dceab6f76ed92105027c49c823800dd33cacce13bdedc5b914e3514b7fb30"},
+    {file = "vine-5.0.0.tar.gz", hash = "sha256:7d3b1624a953da82ef63462013bbd271d3eb75751489f9807598e8f340bd637e"},
 ]
 watchgod = [
     {file = "watchgod-0.6-py35.py36.py37-none-any.whl", hash = "sha256:59700dab7445aa8e6067a5b94f37bae90fc367554549b1ed2e9d0f4f38a90d2a"},

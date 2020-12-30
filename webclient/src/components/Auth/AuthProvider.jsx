@@ -31,6 +31,8 @@ const AuthProvider = ({ children }) => {
             setAuthState('authenticated');
             setUsername('');
             setEmail('');
+          } else {
+            setAuthState('authrequired');
           }
         })
         .catch(() => {

@@ -1,8 +1,13 @@
 import logging
 from secrets import token_hex
+from typing import Optional
 
-from fastapi import Depends, APIRouter, Response
+from fastapi import Depends, APIRouter, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt, JWTError
+from starlette import status
+
+from aiplayground.logging import logger
 from redorm import InstanceNotFound
 from redorm.exceptions import UniqueContstraintViolation
 
@@ -59,6 +64,27 @@ def guest_login(response: Response):
     guest_role = Role.get(name="guest")
     user.update(roles=[guest_role])
     return set_tokens(response, user)
+
+
+@auth_router.post("/refresh", response_model=AuthSchema)
+def refresh(response: Response, refresh_token: Optional[str] = Cookie(None)):
+    if refresh_token is None:
+        logger.debug("No refresh token")
+        return {"success": False}
+    try:
+        claims = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.TOKEN_ALGORITHM])
+        if claims["type"] != "refresh":
+            logger.warning("Attempted refresh with not refresh token")
+            return {"success": False}
+        try:
+            user = User.get(claims["sub"])
+            return set_tokens(response, user)
+        except InstanceNotFound:
+            logger.warning(f"User from refresh token not found: {claims['sub']}")
+            return {"success": False}
+    except JWTError as e:
+        logger.warning(f"JWT Error in refresh token: {e!r}")
+        return {"success": False}
 
 
 # @auth_api.route("/refresh")

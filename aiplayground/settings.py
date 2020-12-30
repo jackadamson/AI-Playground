@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     TOKEN_ALGORITHM: str = "HS256"
     REDIS_URL: Optional[str] = Field(None)
     REDORM_URL: Optional[str] = None
+    SOCKETIO_REDIS_URL: Optional[str] = None
     USER_APPROVAL_REQUIRED: bool = Field(False, description="Require admin approval of users before the can signin")
 
     # Game Server / Player Settings
@@ -40,5 +41,11 @@ class Settings(BaseSettings):
         default = None if values.get("REDIS_URL") is None else f"{values['REDIS_URL']}0"
         return v or default
 
+    @validator("SOCKETIO_REDIS_URL", pre=True, always=True)
+    def default_socketio_redis_url(cls, v, values):
+        return None
+        default = None if values.get("REDIS_URL") is None else f"{values['REDIS_URL']}1"
+        return v or default
 
-settings = Settings()
+
+settings = Settings(_env_file=".env")

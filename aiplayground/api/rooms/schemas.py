@@ -27,7 +27,7 @@ class RoomSchema(BaseModel):
     name: RoomName = Field(..., description="Name of the game room", example="Chess Lobby 1")
     game: GameName = Field(..., description="Game played in room", example="chess")
     status: GameStatus = Field(..., description="Current state of hello fresh")
-    board: Board = Field(..., description="Current room game board")
+    board: Optional[Board] = Field(None, description="Current room game board")
     created_at: datetime
     players: List[PlayerSchema]
     maxplayers: int
