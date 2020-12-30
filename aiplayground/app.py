@@ -7,6 +7,7 @@ from redorm import red
 from aiplayground.settings import settings
 from aiplayground.broker import sio
 from aiplayground.api import rooms_router, players_router, auth_router, initialize_all
+from aiplayground.logging import logger
 
 tags_metadata = [
     {"name": "Players", "description": "Players information"},
@@ -24,6 +25,9 @@ api_app.include_router(players_router)
 api_app.include_router(auth_router)
 
 red.bind(settings.REDORM_URL)
+if settings.EPHEMERAL:
+    logger.info("Flushing Database")
+    red.client.flushall()
 initialize_all()
 
 app = socketio.ASGIApp(socketio_server=sio, other_asgi_app=api_app)

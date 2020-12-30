@@ -49,6 +49,7 @@ class PlayerClient(socketio.AsyncClientNamespace):
         if self.room_id is not None:
             logger.warning("Received rooms callback after joining a room")
             return
+        logger.debug(f"Games available: {rooms}")
         lobbies = [
             (k, v["game"], v["name"]) for k, v in rooms.items() if v["status"] == "lobby" and v["game"] in all_players
         ]
