@@ -3,6 +3,7 @@ from typing import Any, Dict, Tuple
 
 import socketio
 
+from aiplayground.api.bot import Bot
 from aiplayground.api.players import Player
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.settings import settings
@@ -45,8 +46,8 @@ from redorm import InstanceNotFound
 if settings.SOCKETIO_REDIS_URL is None:
     sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 else:
-    logger.info("Creating Kombu Manager")
-    sio_manager = socketio.KombuManager(settings.SOCKETIO_REDIS_URL)
+    logger.info("Creating Redis Manager")
+    sio_manager = socketio.AsyncRedisManager(settings.SOCKETIO_REDIS_URL)
     logger.info("Creating Socketio Server")
     sio = socketio.AsyncServer(async_mode="asgi", client_manager=sio_manager, cors_allowed_origins="*")
     logger.info("Created Socketio Server")
@@ -261,9 +262,30 @@ class GameBroker(socketio.AsyncNamespace):
             },
         )
 
-    def on_connect(self, sid, environ):
-        headers = environ["asgi.scope"]["headers"]
-        logger.error(f"{sid=}, {environ['asgi.scope']['headers']=}")
+    async def on_connect(self, sid, environ):
+        headers = {k.decode(): v.decode() for k, v in environ["asgi.scope"]["headers"]}
+        if headers.get("x-role") == "gameserver":
+            await self.save_session(sid, {"role": "gameserver"})
+            return
+        else:
+            try:
+                api_key = headers["x-api-key"]
+                bot = Bot.get(api_key=api_key)
+                await self.save_session(sid, {"role": "player", "id": bot.id, "name": bot.name})
+                return
+            except KeyError:
+                await self.emit(
+                    "fail",
+                    {"error": "connectFailed", "reason": "missing x-api-key"},
+                    room=sid,
+                )
+            except InstanceNotFound:
+                await self.emit(
+                    "fail",
+                    {"error": "connectFailed", "reason": "invaid api key"},
+                    room=sid,
+                )
+            await self.disconnect(sid)
 
 
 sio.register_namespace(GameBroker())

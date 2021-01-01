@@ -1,13 +1,15 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Security
+
+from aiplayground.api.auth import get_claims
 from redorm import InstanceNotFound
 
 from aiplayground.api.rooms.models import Room
 from aiplayground.api.rooms.schemas import RoomSchema, RoomSchemaSummary
 from aiplayground.logging import logger
 
-rooms_router = APIRouter(prefix="/rooms", tags=["Rooms"])
+rooms_router = APIRouter(prefix="/rooms", tags=["Rooms"], dependencies=[Security(get_claims)])
 
 
 @rooms_router.get("/", response_model=List[RoomSchemaSummary])

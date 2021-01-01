@@ -17,7 +17,7 @@ const Login = ({ authState, setAuthState, setToken }) => {
     axios.post(url, body)
       .then((resp) => {
         if (resp.data.success) {
-          setToken(resp.data.payload);
+          setToken(resp.data.access_token);
           setAuthState('authenticated');
         }
       })
@@ -29,7 +29,12 @@ const Login = ({ authState, setAuthState, setToken }) => {
   };
   const doLogin = (e) => {
     e.preventDefault();
-    login('/auth/login', { email, password });
+    const formData = new FormData();
+    formData.append('username', email);
+    formData.append('password', password);
+    formData.append('grant_type', 'password');
+
+    login('/auth/login', formData);
     return false;
   };
   return (

@@ -1,6 +1,6 @@
 import logging
 from secrets import token_hex
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import Depends, APIRouter, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -18,14 +18,16 @@ from aiplayground.settings import settings
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-def set_tokens(response: Response, user: User) -> dict:
-    access_token = user.create_token(extra_scopes=["fresh"], expires_delta=settings.ACCESS_TOKEN_EXPIRES)
+def set_tokens(response: Response, user: User, extra_scopes: List[str] = None) -> dict:
+    if extra_scopes is None:
+        extra_scopes = []
+    access_token = user.create_token(extra_scopes=extra_scopes, expires_delta=settings.ACCESS_TOKEN_EXPIRES)
     refresh_token = user.create_token(expires_delta=settings.REFRESH_TOKEN_EXPIRES, refresh=True)
     # TODO: Add Cookie URL to refresh_token
     response.set_cookie(
         "refresh_token", value=refresh_token, max_age=int(settings.REFRESH_TOKEN_EXPIRES.total_seconds()), httponly=True
     )
-    return {"success": True, "payload": access_token}
+    return {"success": True, "access_token": access_token}
 
 
 @auth_router.post("/login", response_model=AuthSchema)
@@ -40,7 +42,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         return {"success": False, "message": "Incorrect email or password"}
     if not user.verified:
         return {"success": False, "message": "User not activated"}
-    return set_tokens(response, user)
+    return set_tokens(response, user, extra_scopes=["fresh"])
 
 
 @auth_router.post("/register", response_model=AuthSchema)
@@ -52,7 +54,7 @@ def register(response: Response, registration: RegisterSchema):
         logging.error(e)
         return {"success": False, "message": "Email or username already in use"}
     if user.verified:
-        return set_tokens(response, user)
+        return set_tokens(response, user, extra_scopes=["fresh"])
     return {"success": True, "message": "User created, awaiting approval"}
 
 
@@ -63,7 +65,7 @@ def guest_login(response: Response):
     user: User = User.create(username=username, email=f"guest{guest_id}@guest", verified=False)
     guest_role = Role.get(name="guest")
     user.update(roles=[guest_role])
-    return set_tokens(response, user)
+    return set_tokens(response, user, extra_scopes=["fresh"])
 
 
 @auth_router.post("/refresh", response_model=AuthSchema)
@@ -87,18 +89,12 @@ def refresh(response: Response, refresh_token: Optional[str] = Cookie(None)):
         return {"success": False}
 
 
-# @auth_api.route("/refresh")
-# class Refresh(Resource):
-#     @auth_api.marshal_with(auth_schema)
-#     @require_safely
-#     @jwt_refresh_token_required
-#     def post(self):
-#         # Create the new access token
-#         current_user = get_jwt_identity()
-#         access_token = create_access_token(identity=current_user, fresh=False)
-#         return {"success": True, "payload": access_token}
-#
-#
+@auth_router.post("/logout", response_model=AuthSchema)
+def refresh(response: Response):
+    response.set_cookie("refresh_token", value="", max_age=0, httponly=True)
+    return {"success": True}
+
+
 # @auth_api.route("/me")
 # class Me(Resource):
 #     @auth_api.doc(security="bearertoken")

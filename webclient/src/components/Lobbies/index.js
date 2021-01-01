@@ -1,1 +1,3 @@
-export default from './Lobbies';
+import Lobbies from './Lobbies';
+
+export default Lobbies;

@@ -1,11 +1,14 @@
+from datetime import datetime
 from typing import Optional, List
-
+from enum import Enum
 from pydantic import BaseModel, Field
+
+from aiplayground.types import UserId
 
 
 class AuthSchema(BaseModel):
     success: bool
-    payload: Optional[str] = Field(None, description="Bearer token")
+    access_token: Optional[str] = Field(None, description="Bearer token")
     message: Optional[str] = Field(None, description="Error message")
 
 
@@ -18,6 +21,7 @@ class RoleSchema(BaseModel):
 
 
 class UserSchema(BaseModel):
+    id: UserId
     username: str
     email: str
     roles: List[RoleSchema]
@@ -30,3 +34,16 @@ class RegisterSchema(BaseModel):
     username: str
     email: str
     password: str
+
+
+class TokenType(str, Enum):
+    refresh = "refresh"
+    access = "access"
+
+
+class TokenSchema(BaseModel):
+    sub: str
+    iat: datetime = Field(default_factory=datetime.utcnow)
+    exp: Optional[datetime] = None
+    scopes: List[str] = []
+    type: TokenType = TokenType.access

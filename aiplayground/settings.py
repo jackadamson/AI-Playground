@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # Game Server / Player Settings
     ASIMOV_URL: str = Field("http://127.0.0.1:8000", description="URL for asimov broker / API")
+    API_KEY: Optional[str] = None
     EMAIL: str = ""
     PASSWORD: str = ""
     RUN_ONCE: bool = Field(False, description="Whether to quit after one game")
@@ -43,7 +44,7 @@ class Settings(BaseSettings):
 
     @validator("SOCKETIO_REDIS_URL", pre=True, always=True)
     def default_socketio_redis_url(cls, v, values):
-        return None
+        # return None
         default = None if values.get("REDIS_URL") is None else f"{values['REDIS_URL']}1"
         return v or default
 

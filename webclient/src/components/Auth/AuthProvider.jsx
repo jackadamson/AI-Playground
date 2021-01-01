@@ -27,7 +27,7 @@ const AuthProvider = ({ children }) => {
       axios.post('/auth/refresh')
         .then((resp) => {
           if (resp.data.success) {
-            setToken(resp.data.payload);
+            setToken(resp.data.access_token);
             setAuthState('authenticated');
             setUsername('');
             setEmail('');

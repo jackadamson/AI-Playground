@@ -173,7 +173,7 @@ async def main():
             sio = socketio.AsyncClient(reconnection_attempts=settings.CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
-            await sio.connect(settings.ASIMOV_URL)
+            await sio.connect(settings.ASIMOV_URL, headers={"X-ROLE": "gameserver"})
             await sio.wait()
             break
         except ConnectionError:

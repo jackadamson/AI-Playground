@@ -4,7 +4,10 @@ from typing import Optional, Type, List
 
 from jose import jwt
 from passlib.context import CryptContext
-from redorm import RedormBase, many_to_many
+
+from aiplayground.api.auth.schemas import TokenSchema, TokenType
+from aiplayground.types import UserId
+from redorm import RedormBase, many_to_many, one_to_many
 
 from aiplayground.settings import settings
 
@@ -29,6 +32,7 @@ class Role(RedormBase):
 
 @dataclass
 class User(RedormBase):
+    id: UserId = field(metadata={"unique": True})
     username: str = field(metadata={"unique": True})
     email: str = field(metadata={"unique": True})
     password: Optional[str]
@@ -36,6 +40,7 @@ class User(RedormBase):
     verified: bool = field(default=not settings.USER_APPROVAL_REQUIRED)
     guest: bool = field(default=False)
     roles = many_to_many(Role, backref="users")
+    bots = one_to_many("Bot", backref="user")
 
     @classmethod
     def create(cls: Type["User"], password=None, **kwargs) -> "User":
@@ -83,7 +88,7 @@ class User(RedormBase):
         expire = issued_at + expires_delta if expires_delta is not None else None
         roles = [role.name for role in self.roles]
         scopes = roles + extra_scopes if not refresh else []
-        claims = {"sub": self.id, "scopes": scopes, "iat": issued_at, "type": "refresh" if refresh else "access"}
-        if expire is not None:
-            claims["exp"] = expire
-        return jwt.encode(claims, settings.SECRET_KEY, algorithm=settings.TOKEN_ALGORITHM)
+        token = TokenSchema(
+            sub=self.id, exp=expire, scopes=scopes, type=TokenType.refresh if refresh else TokenType.access
+        )
+        return jwt.encode(token.dict(exclude_none=True), settings.SECRET_KEY, algorithm=settings.TOKEN_ALGORITHM)

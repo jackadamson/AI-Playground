@@ -58,6 +58,8 @@ const Sidebar = ({
             href={prop.href}
             className={classes.item}
             key={prop.name}
+            target="_blank"
+            rel="noopener noreferrer"
           >
             {innerLink(prop)}
           </a>

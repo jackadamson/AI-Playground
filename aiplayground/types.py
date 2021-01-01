@@ -2,9 +2,11 @@ from typing import NewType, Union, Dict, Any
 from enum import Enum
 
 
+BotId = NewType("BotId", str)
 PlayerId = NewType("PlayerId", str)
 RoomId = NewType("RoomId", str)
 StateId = NewType("StateId", str)
+UserId = NewType("UserId", str)
 Board = NewType("Board", Dict[str, Any])
 Move = NewType("Move", Dict[str, Any])
 GameRole = NewType("GameRole", str)

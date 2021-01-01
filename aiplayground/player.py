@@ -125,13 +125,8 @@ class PlayerClient(socketio.AsyncClientNamespace):
 async def main():
     for i in range(settings.CONNECTION_RETRIES):
         try:
-            if settings.EMAIL and settings.PASSWORD:
-                r = requests.post(
-                    settings.ASIMOV_URL + "/auth/login",
-                    auth=(settings.EMAIL, settings.PASSWORD),
-                )
-                token = r.json()["payload"]
-                headers = {"Authorization": f"Bearer {token}"}
+            if settings.API_KEY is not None:
+                headers = {"X-API-KEY": settings.API_KEY}
             else:
                 headers = {}
             sio = socketio.AsyncClient(reconnection_attempts=settings.CONNECTION_RETRIES)

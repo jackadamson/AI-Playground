@@ -5,11 +5,11 @@ import DashboardIcon from '@material-ui/icons/Dashboard';
 import BubbleChart from '@material-ui/icons/BubbleChart';
 import Person from '@material-ui/icons/Person';
 
-import Sidebar from '../../components/Sidebar/Sidebar';
+import Attribution from '../../components/Attribution';
+import Lobbies from '../../components/Lobbies';
+import Sidebar from '../../components/Sidebar';
+import Spectate from '../../components/Spectate';
 import useStyles from './styles';
-
-import Lobbies from '../../components/Lobbies/Lobbies';
-import Spectate from '../../components/Spectate/Spectate';
 
 const routes = [
   {
@@ -34,7 +34,7 @@ const routes = [
     component: Spectate,
   },
   {
-    href: '/api/v1/',
+    href: '/api/v1/docs',
     name: 'API Docs',
     icon: DashboardIcon,
     link: true,
@@ -70,6 +70,7 @@ const AuthLayout = () => {
       >
         <div className={classes.content}>
           <div className={classes.container}>{switchRoutes}</div>
+          <Attribution />
         </div>
       </div>
     </div>

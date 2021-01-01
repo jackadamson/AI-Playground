@@ -10,11 +10,11 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import MobileStepper from '@material-ui/core/MobileStepper';
 import Button from '@material-ui/core/Button';
-import { KeyboardArrowLeft, KeyboardArrowRight } from '@material-ui/icons';
+import { KeyboardArrowLeft, KeyboardArrowRight, FirstPage, LastPage } from '@material-ui/icons';
 import history from '../../history';
 import socketio from '../../socketio';
-import Games from '../Games';
-import { successColor, primaryColor, infoColor } from '../../assets/styles/commonStyles';
+import Games from '../games';
+import { infoColor, primaryColor, successColor } from '../../assets/styles/commonStyles';
 import useStyles from './styles';
 
 const capitalize = (lower) => (lower ? lower.charAt(0).toUpperCase() + lower.substring(1) : '');
@@ -75,51 +75,75 @@ const Spectate = ({ match: { params: { roomId } } }) => {
   }, [roomId, room.game]);
   const state = epoch === null ? states[states.length - 1] : states[epoch];
   const board = state ? state.board : null;
-  const Game = Games[room.game];
+  const Game = Games[room.game] || Games.Default;
   return (
     <>
       <div className={classes.mainArea}>
-        <Typography component="h5" variant="h5">
-          Asimov&apos;s Playground
-        </Typography>
-        <Typography variant="h6">
-          {`Spectating ${room.name}`}
-        </Typography>
-        <span>
-State:
-          <Chip
-            label={capitalize(room.status)}
-            style={{ backgroundColor: getColor(room.status) }}
-          />
-        </span>
         <Container className={classes.mainArea}>
+          <Typography component="h5" variant="h5">
+            Asimov&apos;s Playground
+          </Typography>
+          <Typography variant="h6">
+            {`Spectating ${room.name}`}
+          </Typography>
+          <span>
+State:
+            <Chip
+              label={capitalize(room.status)}
+              style={{ backgroundColor: getColor(room.status) }}
+            />
+          </span>
           {board && Game ? <Game board={board} /> : (<Typography variant="body2">Game not started</Typography>)}
           <MobileStepper
             className={classes.stepper}
             variant="text"
             backButton={(
-              <Button
-                size="small"
-                onClick={() => {
-                  setEpoch(epoch === null ? states.length - 2 : epoch - 1);
-                }}
-                disabled={epoch === 0 || states.length === 0}
-              >
-                <KeyboardArrowLeft />
-                Back
-              </Button>
+              <div>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEpoch(0);
+                  }}
+                  disabled={epoch === 0 || states.length === 0}
+                >
+                  <FirstPage />
+                  First
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEpoch(epoch === null ? states.length - 2 : epoch - 1);
+                  }}
+                  disabled={epoch === 0 || states.length === 0}
+                >
+                  <KeyboardArrowLeft />
+                  Back
+                </Button>
+              </div>
             )}
             nextButton={(
-              <Button
-                size="small"
-                onClick={() => {
-                  setEpoch(epoch === states.length - 2 ? null : epoch + 1);
-                }}
-                disabled={epoch === null || epoch === states.length - 1}
-              >
-                Next
-                <KeyboardArrowRight />
-              </Button>
+              <div>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEpoch(epoch === states.length - 2 ? null : epoch + 1);
+                  }}
+                  disabled={epoch === null || epoch === states.length - 1}
+                >
+                  Next
+                  <KeyboardArrowRight />
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEpoch(states.length - 1);
+                  }}
+                  disabled={epoch === null || epoch === states.length - 1}
+                >
+                  Last
+                  <LastPage />
+                </Button>
+              </div>
             )}
             steps={states.length}
             activeStep={epoch === null ? states.length - 1 : epoch}
