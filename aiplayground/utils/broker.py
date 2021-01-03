@@ -21,7 +21,6 @@ def get_room_player(sid: str, roomid: str, playerid: Optional[str], check_server
     :param playerid:
     :param check_server: Whether to check if the other party has game server permissions
     """
-    # TODO: Remove reliance on SID for authorization
     try:
         room = Room.get(roomid)
     except InstanceNotFound as e:

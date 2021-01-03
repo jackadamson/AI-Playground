@@ -2,10 +2,9 @@ import logging
 from secrets import token_hex
 from typing import Optional, List
 
-from fastapi import Depends, APIRouter, Response, Cookie, HTTPException
+from fastapi import Depends, APIRouter, Response, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
-from starlette import status
 
 from aiplayground.logging import logger
 from redorm import InstanceNotFound
@@ -23,9 +22,12 @@ def set_tokens(response: Response, user: User, extra_scopes: List[str] = None) -
         extra_scopes = []
     access_token = user.create_token(extra_scopes=extra_scopes, expires_delta=settings.ACCESS_TOKEN_EXPIRES)
     refresh_token = user.create_token(expires_delta=settings.REFRESH_TOKEN_EXPIRES, refresh=True)
-    # TODO: Add Cookie URL to refresh_token
     response.set_cookie(
-        "refresh_token", value=refresh_token, max_age=int(settings.REFRESH_TOKEN_EXPIRES.total_seconds()), httponly=True
+        "refresh_token",
+        value=refresh_token,
+        max_age=int(settings.REFRESH_TOKEN_EXPIRES.total_seconds()),
+        httponly=True,
+        path="/api/v1/auth/refresh",
     )
     return {"success": True, "access_token": access_token}
 
@@ -91,7 +93,7 @@ def refresh(response: Response, refresh_token: Optional[str] = Cookie(None)):
 
 @auth_router.post("/logout", response_model=AuthSchema)
 def refresh(response: Response):
-    response.set_cookie("refresh_token", value="", max_age=0, httponly=True)
+    response.set_cookie("refresh_token", value="", max_age=0, httponly=True, path="/api/v1/auth/refresh")
     return {"success": True}
 
 
@@ -106,14 +108,3 @@ def refresh(response: Response):
 #         """
 #         current_user = get_jwt_identity()
 #         return User.get(current_user)
-#
-#
-# @auth_api.route("/logout")
-# class Logout(Resource):
-#     def post(self):
-#         """
-#         Removes access and refresh tokens
-#         """
-#         resp = jsonify({"logout": True})
-#         unset_jwt_cookies(resp)
-#         return resp

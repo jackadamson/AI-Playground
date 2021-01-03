@@ -1,6 +1,7 @@
 from redorm.exceptions import UniqueContstraintViolation, InstanceNotFound
 from aiplayground.api.auth.models import Role, User
 from aiplayground.logging import logger
+from aiplayground.settings import settings
 
 
 def initialize_auth():
@@ -21,10 +22,15 @@ def initialize_roles():
 
 
 def initialize_users():
-    # TODO: Remove hard coded creds
-    email = "test@test.com"
-    password = "test"
+    if settings.ADMIN_EMAIL is None or settings.ADMIN_PASSWORD is None:
+        logger.info("Skipping creating admin as missing email and/or password")
     try:
-        User.get(email=email)
+        user = User.get(email=settings.ADMIN_EMAIL)
     except InstanceNotFound:
-        User.create(email=email, password=password, username="test")
+        user = User.create(email=settings.ADMIN_EMAIL, password=settings.ADMIN_PASSWORD, username="test")
+    roles = Role.list()
+    logger.info(f"Roles = {roles!r}")
+    admin_role = Role.get(name="admin")
+    if admin_role not in user.roles:
+        user.roles += [admin_role]
+        user.save()

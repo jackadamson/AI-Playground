@@ -26,6 +26,7 @@ class Room(RedormBase):
     maxplayers: int
     server_sid: GameServerSID
     board: Optional[Board]
+    private: bool = field(default=False, metadata={"index": True})
     status: str = field(default="lobby", metadata={"index": True})
     turn: Optional[PlayerId] = field(default=None)
     normal_finish: Optional[bool] = field(default=None)

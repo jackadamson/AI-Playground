@@ -14,7 +14,7 @@ rooms_router = APIRouter(prefix="/rooms", tags=["Rooms"], dependencies=[Security
 
 @rooms_router.get("/", response_model=List[RoomSchemaSummary])
 def list_rooms():
-    return Room.list()
+    return Room.list(private=False)
 
 
 @rooms_router.get("/{room_id}", response_model=RoomSchema)

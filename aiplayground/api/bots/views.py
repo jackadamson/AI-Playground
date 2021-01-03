@@ -3,8 +3,8 @@ from typing import List
 from fastapi import APIRouter, Security, HTTPException, status
 
 from aiplayground.api.auth import get_user_id, User
-from aiplayground.api.bot.models import Bot
-from aiplayground.api.bot.schemas import BotSchema, BotPrivateSchema, CreateBotSchema
+from aiplayground.api.bots.models import Bot
+from aiplayground.api.bots.schemas import BotSchema, BotPrivateSchema, CreateBotSchema
 from aiplayground.logging import logger
 from aiplayground.types import UserId, BotId
 

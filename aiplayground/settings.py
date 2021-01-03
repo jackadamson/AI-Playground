@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     # Broker Settings
     ALLOW_GUEST: bool = Field(True, description="Allow users to login without registering")
+    ADMIN_EMAIL: Optional[str] = Field(None, description="Email of admin account to create")
+    ADMIN_PASSWORD: Optional[str] = Field(None, description="Password of admin account to create")
     EPHEMERAL: bool = Field(False, description="Delete database on startup (for development)")
     SECRET_KEY: str = Field(token_urlsafe(32))
     ACCESS_TOKEN_EXPIRES: timedelta = timedelta(minutes=15)

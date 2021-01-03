@@ -4,7 +4,6 @@ import time
 from time import sleep
 from typing import Optional, Type, Dict
 
-import requests
 import socketio
 from socketio.exceptions import ConnectionError
 

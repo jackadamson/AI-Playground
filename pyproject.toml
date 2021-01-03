@@ -19,7 +19,7 @@ python-socketio = "^4.3.1"
 requests = "^2.22.0"
 pydantic = { version = "^1.7.3", python = ">=3.6", extras = ["dotenv"] }
 python-multipart = {version = "^0.0.5", optional = true }
-redorm = { version = ">=0.6.7", optional = true }
+redorm = { version = ">=0.6.9", optional = true }
 fastapi = { version = ">=0.63.0", optional = true }
 uvicorn = { version = ">=0.13.2", optional = true, extras = ["standard"] }
 passlib = {version = "^1.7.4", optional = true, extras = ["bcrypt"]}

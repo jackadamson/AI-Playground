@@ -123,6 +123,14 @@ class InputValidationError(AsimovErrorBase):
     details = "Failed to validate JSON schema"
 
 
+class NoMatchesReady(AsimovExceptionBase):
+    """
+    Raised by broker to indicate no pairs of players ready to play a tournament match
+    """
+
+    details = "No matches ready to play"
+
+
 # TODO: Refactor this abomination
 # Creates a dictionary from the string name to the exception of all subclasses of
 # Asimov ExceptionBase

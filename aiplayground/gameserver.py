@@ -28,7 +28,7 @@ from aiplayground.messages import (
     Finish,
 )
 from aiplayground.settings import settings
-from aiplayground.types import GameName, RoomName, RoomId
+from aiplayground.types import GameName, RoomName, RoomId, TournamentKey
 from aiplayground.utils.atomic import AtomicCounter
 from aiplayground.utils.expect import expect
 
@@ -48,12 +48,14 @@ class GameServer(socketio.AsyncClientNamespace):
     lock: Lock
     room_id: Optional[RoomId]
     player_counter: AtomicCounter
+    api_key: TournamentKey
 
-    def __init__(self, gamename=settings.GAME, name=settings.LOBBY_NAME):
+    def __init__(self, gamename=settings.GAME, name=settings.LOBBY_NAME, api_key=settings.API_KEY):
         super().__init__()
         self.game = all_games[gamename]()
         self.game_name = gamename
         self.name = name
+        self.api_key = api_key
         self.player_counter = AtomicCounter()
         self.lock = Lock()
 
@@ -173,7 +175,7 @@ async def main():
             sio = socketio.AsyncClient(reconnection_attempts=settings.CONNECTION_RETRIES)
             server = GameServer()
             sio.register_namespace(server)
-            await sio.connect(settings.ASIMOV_URL, headers={"X-ROLE": "gameserver"})
+            await sio.connect(settings.ASIMOV_URL, headers={"X-ROLE": "gameserver", "X-API-KEY": settings.API_KEY})
             await sio.wait()
             break
         except ConnectionError:

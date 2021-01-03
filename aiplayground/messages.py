@@ -15,6 +15,7 @@ from aiplayground.types import (
     RoomName,
     GameName,
     SioSID,
+    TournamentId,
 )
 from aiplayground.logging import logger
 
@@ -235,6 +236,16 @@ class JoinMessage(MessageBase):
     name: PlayerName
 
 
+class JoinQueueMessage(MessageBase):
+    """
+    :param str tournamentid: Tournament to join queue of
+
+    Player request to broker to join a tournament match making queue
+    """
+
+    tournamentid: TournamentId
+
+
 class MoveMessage(MessageBase):
     """
     :param str playerid: Player making a move
@@ -252,6 +263,14 @@ class MoveMessage(MessageBase):
 class ListMessage(MessageBase):
     """
     Player requests list of available rooms
+    """
+
+    pass
+
+
+class ListTournamentsMessage(MessageBase):
+    """
+    Player requests list of available tournaments
     """
 
     pass

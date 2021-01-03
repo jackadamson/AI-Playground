@@ -3,7 +3,7 @@ from typing import Any, Dict, Tuple
 
 import socketio
 
-from aiplayground.api.bot import Bot
+from aiplayground.api.bots import Bot
 from aiplayground.api.players import Player
 from aiplayground.api.rooms import Room, GameState
 from aiplayground.settings import settings
@@ -88,6 +88,8 @@ class GameBroker(socketio.AsyncNamespace):
             raise NoSuchRoom from e
         if room.status != "lobby":
             raise GameAlreadyStarted
+        elif room.private:
+            raise NoSuchRoom
         else:
             logger.debug(f"Registering user")
             await RegisterMessage(roomid=msg.roomid, playerid=player_id).send(self, to=room.server_sid)
@@ -232,7 +234,7 @@ class GameBroker(socketio.AsyncNamespace):
                     "players": len(room.players),
                     "status": room.status,
                 }
-                for room in Room.list(status="lobby")
+                for room in Room.list(status="lobby", private=False)
             },
         )
 
