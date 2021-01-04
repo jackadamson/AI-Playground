@@ -2,16 +2,18 @@ import logging
 from secrets import token_hex
 from typing import Optional, List
 
-from fastapi import Depends, APIRouter, Response, Cookie
+from fastapi import Depends, APIRouter, Response, Cookie, Security
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 
 from aiplayground.logging import logger
+from aiplayground.types import UserId
 from redorm import InstanceNotFound
 from redorm.exceptions import UniqueContstraintViolation
 
 from aiplayground.api.auth.models import User, Role
-from aiplayground.api.auth.schemas import AuthSchema, RegisterSchema
+from aiplayground.api.auth.auth import get_user_id
+from aiplayground.api.auth.schemas import AuthSchema, RegisterSchema, UserPrivateSchema
 from aiplayground.settings import settings
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -95,6 +97,11 @@ def refresh(response: Response, refresh_token: Optional[str] = Cookie(None)):
 def refresh(response: Response):
     response.set_cookie("refresh_token", value="", max_age=0, httponly=True, path="/api/v1/auth/refresh")
     return {"success": True}
+
+
+@auth_router.get("/me", response_model=UserPrivateSchema)
+def me(user_id: UserId = Security(get_user_id)):
+    return User.get(user_id)
 
 
 # @auth_api.route("/me")

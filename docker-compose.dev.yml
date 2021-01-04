@@ -30,6 +30,7 @@ services:
       JWT_SECRET_KEY: "NotAProdSecret"
     volumes:
       - ./aiplayground:/app/aiplayground:ro
+      - ../redorm/redorm:/usr/local/lib/python3.8/site-packages/redorm:ro
     ports:
       - 8000:80
     labels:

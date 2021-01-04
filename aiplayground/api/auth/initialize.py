@@ -16,8 +16,9 @@ def initialize_roles():
     for role in ROLES:
         try:
             logger.info(f"Creating role: {role}")
+            Role.get(name=role)
+        except InstanceNotFound:
             Role.create(name=role, description=role)
-        except UniqueContstraintViolation:
             logger.info("Role exists")
 
 

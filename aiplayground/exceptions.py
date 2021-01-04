@@ -131,6 +131,14 @@ class NoMatchesReady(AsimovExceptionBase):
     details = "No matches ready to play"
 
 
+class AlreadyInTournament(AsimovExceptionBase):
+    """
+    Raised by broker to indicate bot was added to tournament it is already in
+    """
+
+    details = "Already in this tournament"
+
+
 # TODO: Refactor this abomination
 # Creates a dictionary from the string name to the exception of all subclasses of
 # Asimov ExceptionBase

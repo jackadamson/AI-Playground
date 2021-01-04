@@ -20,7 +20,7 @@ class RoleSchema(BaseModel):
         orm_mode = True
 
 
-class UserSchema(BaseModel):
+class UserPrivateSchema(BaseModel):
     id: UserId
     username: str
     email: str

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Iterable
+from typing import Optional, List
 from secrets import token_urlsafe
 from functools import partial
 from enum import Enum
@@ -27,28 +27,28 @@ class Tournament(RedormBase):
     game: GameName = field(metadata={"index": True})
     description: Optional[str] = field(default=None)
     api_key: TournamentKey = field(default_factory=partial(token_urlsafe, 32))
-    participants: Iterable["Participant"] = one_to_many("Participant", backref="tournament")
-    matches: Iterable["Match"] = one_to_many("Match", backref="tournament")
+    participants = one_to_many("Participant", backref="tournament")
+    matches = one_to_many("Match", backref="tournament")
 
 
 @dataclass
 class Participant(RedormBase):
     id: ParticipantId
     index: int
-    tournament: Tournament = many_to_one(Tournament, backref="participants")
-    bot: Bot = many_to_one(Bot, backref="participants")
+    tournament = many_to_one(Tournament, backref="participants")
+    bot = many_to_one(Bot, backref="participants")
     disqualified: bool = field(default=False)
-    matches: Iterable["Match"] = many_to_many("Match", backref="players")
+    matches = many_to_many("Match", backref="players")
 
 
 @dataclass
 class Match(RedormBase):
     id: MatchId
     index: int
-    tournament: Tournament = many_to_one(Tournament, backref="matches")
+    tournament = many_to_one(Tournament, backref="matches")
     state: MatchState = field(default=MatchState.pending, metadata={"index": True})
-    players: Iterable[Participant] = many_to_many(Participant, backref="matches")
-    room: Optional[Room] = one_to_one(Room, backref="match")
+    players = many_to_many(Participant, backref="matches")
+    room = one_to_one(Room, backref="match")
 
 
 @dataclass

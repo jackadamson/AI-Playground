@@ -5,18 +5,31 @@ from aiplayground.api.tournaments.models import Participant, Tournament, Match, 
 from collections import defaultdict
 
 import operator
+
+from aiplayground.exceptions import AlreadyInTournament
+from aiplayground.logging import logger
 from aiplayground.types import PlayerSID
 
 
 def add_player(bot: Bot, tournament: Tournament) -> Participant:
+    logger.debug("Getting tournament lock: %s", tournament.id)
     with tournament.lock():
+        logger.debug("Got lock for tournament: %s", tournament.id)
         participants = tournament.participants
-        index = max(x.index for x in participants) + 1
+        participant_ids = {participant.bot.id for participant in participants}
+        if bot.id in participant_ids:
+            raise AlreadyInTournament
+        index = max(x.index for x in participants) + 1 if participants else 1
         participant = Participant.create(index=index, bot=bot, tournament=tournament)
         for opponent in participants:
             if opponent.disqualified:
                 continue
-            Match.create(index=100000 * index + opponent.index, tournament=tournament, players=[participant, opponent])
+            Match.create(
+                index=100000 * index + opponent.index,
+                tournament=tournament,
+                players=[participant, opponent],
+                state=MatchState.pending,
+            )
         return participant
 
 
